@@ -4,6 +4,8 @@ https://github.com/epirecipes/sir-julia
 https://github.com/epirecipes/sir-julia/blob/master/markdown/abm/abm.md
 https://juliadynamics.github.io/Agents.jl/stable/examples/sir/ 
 =#
+using Pkg
+Pkg.activate(".")
 
 using Agents
 using Random
