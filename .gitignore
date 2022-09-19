@@ -29,3 +29,4 @@ Manifest.toml
 *.pptx
 *.mp4
 .vscode/settings.json
+.ipynb_checkpoints
