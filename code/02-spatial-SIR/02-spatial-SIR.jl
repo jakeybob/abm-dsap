@@ -5,7 +5,6 @@ Pkg.activate(".")
 
 using Agents, Random, InteractiveDynamics, GLMakie, CairoMakie, StatsPlots
 
-
 # DEFINE AGENT ####
 # (id, pos and vel properties created automatically for ContinuousAgent type)
 @agent Person ContinuousAgent{2} begin
@@ -164,7 +163,6 @@ infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
 to_collect = [(:status, f) for f in (susceptible, infected, recovered)]
 
-
 n_steps = 1000
 immovable_1, immovable_2 = 0.0, 0.2
 
@@ -174,21 +172,8 @@ abm_data_1, _ = run!(model_1, agent_step!, model_step!, n_steps; adata = to_coll
 model_2 = init_model(immovable = immovable_2)
 abm_data_2, _ = run!(model_2, agent_step!, model_step!, n_steps; adata = to_collect) # run model and collect data; returned as abm_data
 
-figure = Figure()
-ax = figure[1, 1] = Axis(figure; ylabel = "Infected")
-l1 = lines!(ax, abm_data_1[:, dataname((:status, infected))], color = :orange)
-l2 = lines!(ax, abm_data_2[:, dataname((:status, infected))], color = :blue)
-
-figure[1, 2][1,1] =
-    Legend(figure, [l1, l2], ["immovable = $immovable_1", "immovable = $immovable_2"])
-figure
-
-
-# t = abm_data_1.step .* model_1.Δt
-# title = "plot"
-# p = plot(t, abm_data_1[:, 3], xlab="time", ylabel="N agents", title = title, lw=3)
-# p = plot!(t, abm_data_1[:, 4], label="I", lw = 3)
-
-
-
-
+t = abm_data_1.step .* model_1.Δt
+title = "2D ABM SIR test"
+p = StatsPlots.plot(t, abm_data_1[:, 3], xlab="time", ylabel="N agents infected", title = title, label="immovable="*string(immovable_1),lw=3)
+p = StatsPlots.plot!(t, abm_data_2[:, 3], label="immovable="*string(immovable_2), lw = 3)
+savefig(p, "pics/test.png")

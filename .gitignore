@@ -30,3 +30,4 @@ Manifest.toml
 *.mp4
 .vscode/settings.json
 .ipynb_checkpoints
+*.png
