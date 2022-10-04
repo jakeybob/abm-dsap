@@ -9,7 +9,7 @@ using Agents, Random, InteractiveDynamics, GLMakie, CairoMakie, StatsPlots
 # (id, pos and vel properties created automatically for ContinuousAgent type)
 @agent Person ContinuousAgent{2} begin
     mass::Float64 # set this to Inf and vel to 0,0 for immovable agent; is assumed 1 if not set for elastic_collisions
-    days_infected::Int  # number of days since is infected
+    steps_infected::Int  # number of model steps since infection
     status::Symbol  # disease status, S, I, R
     β::Float64 # infectivity (currently inherited from global model params)
     # num_infected::Int # number infected, for calculating effective R0
@@ -68,16 +68,16 @@ model = init_model()
 
 # DEFINE AGENT_STEP ####
 # if infected, increment counter
-update!(agent) = agent.status == :I && (agent.days_infected += 1)
+update!(agent) = agent.status == :I && (agent.steps_infected += 1)
 
 # if infected for long time then either kill or recover
 function recover_or_die!(agent, model)
-    if agent.days_infected ≥ model.infection_period
+    if agent.steps_infected ≥ model.infection_period
         if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
         else
             agent.status = :R
-            agent.days_infected = 0
+            agent.steps_infected = 0
         end
     end
 end
@@ -114,10 +114,10 @@ end
 
 # model step applies transmit!() and elastic_collision!() to each agent pair
 function model_step!(model)
-    r = model.interaction_radius / 2
+    r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r, :nearest)
         transmit!(a1, a2, model.reinfection_probability)
-        elastic_collision!(a1, a2, :mass)
+        # elastic_collision!(a1, a2, :mass)
     end
 end
 
@@ -178,3 +178,13 @@ p = StatsPlots.plot(t, abm_data_1[:, 3], xlab="time", ylabel="N agents infected"
 p = StatsPlots.plot!(t, abm_data_2[:, 3], label="immovable="*string(immovable_2), lw = 3)
 p
 savefig(p, "pics/test.png")
+
+
+# SCRATCH ####
+GLMakie.activate!()
+model = init_model(N = 50, immovable = 0)
+fig, ax, abmobs = abmplot(model;
+    agent_step! = agent_step!, 
+    model_step! = model_step!,
+    ac = colours)
+fig
