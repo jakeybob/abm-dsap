@@ -24,9 +24,14 @@ docs/site/
 Manifest.toml
 
 # Miscellaneous
+dsap_presentation_files/
+
 .DS_Store
 *.html
 *.pptx
 *.mp4
 .vscode/settings.json
 .ipynb_checkpoints
+
+# Allows
+!docs/intro_presentation/*.mp4

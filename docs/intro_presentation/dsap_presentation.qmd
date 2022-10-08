@@ -1,0 +1,250 @@
+---
+title: "An Agent Based Infectious Disease Model"
+subtitle: "Data Science Accelerator Programme"
+title-slide-attributes:
+    data-background-image: "presentation_files/phs_title_slide_background_1200x900.png"
+    data-background-size: contain
+    data-background-opacity: "1"
+width: 1200
+height: 900
+author:
+  name: Bob Taylor
+date: 09/13/2022
+date-format: long
+format: 
+  revealjs:
+    css: presentation_files/presentation.css
+    chalkboard: true
+---
+
+## {background-color="#7030A0"}
+
+<p>&nbsp;</p>
+[Introduction]{style="color: white; font-weight: bold; font-size: 80px"}
+<p>&nbsp;</p>
+[Outputs]{style="color: white; font-weight: bold; font-size: 80px"}
+<p>&nbsp;</p>
+[Benefits & Goals]{style="color: white; font-weight: bold; font-size: 80px"}
+<p>&nbsp;</p>
+[Conclusion]{style="color: white; font-weight: bold; font-size: 80px"}
+
+::: {.notes}
+**Introduction:** background on what agent based modelling is; PROS and CONS
+
+**Outputs:** what the end products / potential end products of the project are
+
+**Benefits & Goals:** why bother? How does this project benefit PHS or the public?
+:::
+
+
+# Introduction {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {style="font-size: 1.25em"}
+
+**<u>Traditional</u>** (e.g. SEIR models)
+
+* large sets of differential equations solved numerically
+
+
+* global outcomes based on system-wide behaviours
+
+:::
+
+<figure>
+<img src="pics/seir.png" class="centerimg50">
+  <figcaption style="font-size: medium"><a href="https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology">en.wikipedia.org/wiki/Compartmental_models_in_epidemiology</a></figcaption>
+</figure>
+
+::: {.notes}
+TYPICALLY
+
+**S**usceptible
+**E**xposed
+**I**nfected
+**R**ecovered
+
+... give smooth continuous estimates of global outcomes estimated from system wide behaviours
+
+TOP DOWN methodology where you set population level parameters
+
+:::
+
+## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {style="font-size: 1.25em"}
+
+**<u>Agent Based Models</u>**
+
+* individual agents given *behaviours* and *attributes*
+
+
+* allowed to *interact*, make decisions $\rightarrow$ evolve; e.g. become infected, admitted to hospital etc
+
+:::
+
+ABMs can effectively replicate SEIR models...
+
+::: {layout-ncol=3}
+![**10 agents**](pics/sir_10.png)
+
+![**100 agents**](pics/sir_100.png)
+
+![**1,000 agents**](pics/sir_1000.png)
+:::
+
+::: {.notes}
+ABMs take a **BOTTOM UP** approach...
+
+Individual agents; time stepped
+
+Might say 5% of people have flu for continuous approach, or *these* 50 out of 1000 have flu
+
+**PLOTS**
+
+Agents given
+
+$\Beta$ = probability of a contact causing an infection
+c = poisson expectation of number of expected contacts in each time step
+
+in this simple model we can see a continous-like behaviour emerge when using many agents
+
+:::
+
+
+## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {style="font-size: 1.25em"}
+
+**<u>ABM advantages</u>**
+
+* can model *heterogenous* populations
+  - individiual level age/sex etc
+  - time dependent individiual infectivity
+<p>&nbsp;</p>
+
+* include feedback loops, emergent behaviour
+  - readmission/reinfection
+  - *flocking*
+  - clustering, small scale effects
+
+:::
+
+::: {.notes}
+**Heterogenous** – ie populations where every person is different and discrete
+
+**Feedback loops** – people more likely to be readmitted
+
+**Emergent behaviour** – flocking, clustering
+
+**Clustering / small scale effects** – can have highly localised pocket of high transmission (superspreader)
+
+ABMs good at including complex societal interactions
+
+:::
+
+# Outputs {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+1. robust [Julia](https://julialang.org/) codebase (using [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/) library) for infectious disease ABM…
+
+2. interactive [Jupyter](https://jupyter.org/) notebook/s... (**MVP**)
+
+3. web *API* service, or (less likely) web app...
+
+![](agents.mp4){fig-align="center"}
+
+::: {.notes}
+**OUTPUTS**
+
+1. code that can model a variety of ABM disease transmission scenarios
+
+2. interactive notebook
+
+stretch goals...
+
+3. web API service -- a tool people can query; or web app (see fancy animation)
+:::
+
+
+# {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+**Potential Extensions**
+
+* user definable parameters such as deprivation/disease (type, $R_0$)
+
+* time dependent parameters (social distancing, lockdown)
+
+* geospatial / 2D analysis (OpenStreetMap integration?)
+
+![](sir_anim.mp4){fig-align="center"}
+
+::: {.notes}
+other potential things to try if time allows....
+:::
+
+
+# Benefits & Goals {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+**PHS**
+
+* experience with different modelling paradigm (pros + cons)
+
+* inherit code + expertise useful for more public health problems
+
+* experience with / evaluation of Julia language, libraries and tools
+
+**Public**
+
+* publicly available code ([GitHub](https://github.com/jakeybob/abm-dsap))
+
+* interactive element
+
+* (relatively) easy to intuit / understand
+
+::: {.notes}
+**PHS**
+ABM pros – already defined
+ABM cons – not sure! Potentially computationally expensive?
+
+*rest in slide*
+
+**PUBLIC**
+code / intereactive / intuitive
+
+:::
+
+
+# Conclusion {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {style="font-size: 1.4em"}
+
+* agent based models can be both useful and informative – but currently underused in public health
+
+* this project allows initial exploration of this type of modelling + tools
+
+* benefits to both PHS and public
+
+:::
+
+
+## {background-color="#002060" transition="zoom"}
+
+[Questions...?]{style="color: white; font-weight: bold; font-size: 120px"}
+
+::: {.notes}
+
+Why Julia?
+
+R best option for 90% of people 90% of the time.
+
+But for ABMs – 
+R has no real library
+NetLogo is single-purpose
+Python does have Mesa library, but less fully featured
+
+Julia is new, has good ABM library, lots of potential, very “tidy”, good package management etc
+
+Something of a “middle ground” between R and Python
+
+Is kind of what DSAP is for -- testing / trying new stuff.
+
+:::
