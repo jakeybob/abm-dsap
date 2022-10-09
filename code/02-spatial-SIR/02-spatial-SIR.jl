@@ -3,7 +3,7 @@ cd(@__DIR__)
 import Pkg
 Pkg.activate(".")
 
-using Agents, Random, InteractiveDynamics, GLMakie, CairoMakie, StatsPlots
+using Agents, Random, InteractiveDynamics, GLMakie, CairoMakie, StatsPlots, Statistics
 
 # DEFINE AGENT ####
 # (id, pos and vel properties created automatically for ContinuousAgent type)
@@ -39,12 +39,14 @@ function init_model(;
     speed = 0.002, # initial speed of agents
     spacing = 0.02,
     seed = 1234,
+    collide_physics = false,
 )
     # dictionary of above properties to be applied globally to model
     properties = Dict(:infection_period => infection_period, 
         :reinfection_probability => reinfection_probability, 
         :death_rate => death_rate,
         :interaction_radius => interaction_radius,
+        :collide_physics => collide_physics,
         :Δt => Δt)
 
     space = ContinuousSpace((1, 1); spacing = spacing)
@@ -55,7 +57,7 @@ function init_model(;
         pos = Tuple(rand(model.rng, 2))
         status = ind ≤ N - I0 ? :S : :I
         isimmovable = ind ≤ immovable * N
-        mass = isimmovable ? Inf : 1.0
+        mass = isimmovable ? 1000 : 1.0
         vel = isimmovable ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
 
         add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
@@ -119,7 +121,9 @@ function model_step!(model)
     r = model.interaction_radius
     for (a1, a2) in interacting_pairs(model, r, :nearest)
         transmit!(a1, a2, model.reinfection_probability)
-        # elastic_collision!(a1, a2, :mass)
+        if model.collide_physics == true
+            elastic_collision!(a1, a2, :mass)
+        end
     end
 end
 
@@ -134,7 +138,8 @@ fig
 
 # INTERACTIVE MODEL ####
 GLMakie.activate!()
-model = init_model()
+model = init_model(collide_physics = false)
+colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
 fig, ax, abmobs = abmplot(model;
     agent_step! = agent_step!, 
     model_step! = model_step!,
@@ -142,11 +147,12 @@ fig, ax, abmobs = abmplot(model;
 fig
 
 
-# VIDEO OUTPUT ####
+# VIDEO TEST for collision physics ####
 CairoMakie.activate!()
-model = init_model()
+collide = false
+model = init_model(collide_physics = collide, immovable = 0.1)
 abmvideo(
-    "abm_test.mp4",
+    "abm_test_" * string(collide) * ".mp4",
     model,
     agent_step!,
     model_step!;
@@ -195,6 +201,22 @@ title = "2D ABM SIR dead"
 p = StatsPlots.plot(t, abm_data_1[:, :alive_status], xlab="time", ylabel="N agents infected", title = title, label="immovable="*string(immovable_1),lw=3)
 p = StatsPlots.plot!(t, abm_data_2[:, :alive_status], label="immovable="*string(immovable_2), lw = 3)
 p
+
+
+# R0
+model_1 = init_model(immovable = immovable_1, N=n_agents)
+r_data, _ = run!(model_1, agent_step!, model_step!, n_steps; adata = [:num_infected])
+z = filter(row -> row["step"] == 1000, r_data)
+r0_1 = round(mean(z.num_infected), digits = 2)
+
+histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
+
+
+model_2 = init_model(immovable = immovable_2, N=n_agents)
+r_data, _ = run!(model_2, agent_step!, model_step!, n_steps; adata = [:num_infected])
+z = filter(row -> row["step"] == 1000, r_data)
+histogram(z.num_infected, bins=0:20)
+mean(z.num_infected)
 
 
 # SCRATCH ####
