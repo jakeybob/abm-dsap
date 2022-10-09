@@ -111,6 +111,7 @@ function transmit!(a1, a2, reinfection_probability)
 
     # otherwise, healthy agent is infected
     healthy.status = :I
+    infected.num_infected += 1
 end
 
 # model step applies transmit!() and elastic_collision!() to each agent pair
