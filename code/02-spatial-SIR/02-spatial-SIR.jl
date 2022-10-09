@@ -12,7 +12,7 @@ using Agents, Random, InteractiveDynamics, GLMakie, CairoMakie, StatsPlots
     steps_infected::Int  # number of model steps since infection
     status::Symbol  # disease status, S, I, R
     β::Float64 # infectivity (currently inherited from global model params)
-    # num_infected::Int # number infected, for calculating effective R0
+    num_infected::Int # number infected, for calculating effective R0
     # age::Int8
     # sex::Symbol
     # type::Symbol # dummy for testing other potential variables
@@ -25,6 +25,7 @@ function init_model(;
     N = 1000, # number of agents
     I0 = 5, # initial number infected
     immovable = 0.1,  # fraction of immovable agents
+    num_infected = 0,
 
     # disease proerties
     infection_period = 200,
@@ -57,7 +58,7 @@ function init_model(;
         mass = isimmovable ? Inf : 1.0
         vel = isimmovable ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
 
-        add_agent!(pos, model, vel, mass, 0, status, β)
+        add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
     end
 
     return model
@@ -165,19 +166,34 @@ to_collect = [(:status, f) for f in (susceptible, infected, recovered)]
 
 n_steps = 1000
 immovable_1, immovable_2 = 0.0, 0.5
+n_agents = 1000
 
-model_1 = init_model(immovable = immovable_1)
+model_1 = init_model(immovable = immovable_1, N=n_agents)
 abm_data_1, _ = run!(model_1, agent_step!, model_step!, n_steps; adata = to_collect) # run model and collect data; returned as abm_data
+abm_data_1.alive_status  = abm_data_1.infected_status + abm_data_1.recovered_status + abm_data_1.susceptible_status
+abm_data_1.dead_status  = n_agents .- abm_data_1.alive_status
 
-model_2 = init_model(immovable = immovable_2)
+model_2 = init_model(immovable = immovable_2, N=n_agents)
 abm_data_2, _ = run!(model_2, agent_step!, model_step!, n_steps; adata = to_collect) # run model and collect data; returned as abm_data
+abm_data_2.alive_status  = abm_data_2.infected_status + abm_data_2.recovered_status + abm_data_2.susceptible_status
+abm_data_2.dead_status  = n_agents .- abm_data_2.alive_status
 
+
+# PLOT of infected
 t = abm_data_1.step .* model_1.Δt
-title = "2D ABM SIR test"
+title = "2D ABM SIR infected"
 p = StatsPlots.plot(t, abm_data_1[:, 3], xlab="time", ylabel="N agents infected", title = title, label="immovable="*string(immovable_1),lw=3)
 p = StatsPlots.plot!(t, abm_data_2[:, 3], label="immovable="*string(immovable_2), lw = 3)
 p
-savefig(p, "pics/test.png")
+# savefig(p, "pics/infected.png")
+
+
+# PLOT of alive
+t = abm_data_1.step .* model_1.Δt
+title = "2D ABM SIR dead"
+p = StatsPlots.plot(t, abm_data_1[:, :alive_status], xlab="time", ylabel="N agents infected", title = title, label="immovable="*string(immovable_1),lw=3)
+p = StatsPlots.plot!(t, abm_data_2[:, :alive_status], label="immovable="*string(immovable_2), lw = 3)
+p
 
 
 # SCRATCH ####
