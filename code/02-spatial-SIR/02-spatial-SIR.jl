@@ -215,7 +215,7 @@ p
 
 # PLOT of alive
 t = abm_data_1.step .* model_1.Δt
-title = "2D ABM SIR dead"
+title = "2D ABM SIR alive"
 p = StatsPlots.plot(t, abm_data_1[:, :alive_status], xlab="time", ylabel="N agents infected", title = title, label="immovable="*string(immovable_1),lw=3)
 p = StatsPlots.plot!(t, abm_data_2[:, :alive_status], label="immovable="*string(immovable_2), lw = 3)
 p
@@ -228,7 +228,6 @@ z = filter(row -> row["step"] == 1000, r_data)
 r0_1 = round(mean(z.num_infected), digits = 2)
 
 histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
-
 
 model_2 = init_model(immovable = immovable_2, N=n_agents)
 r_data, _ = run!(model_2, agent_step!, model_step!, n_steps; adata = [:num_infected])
