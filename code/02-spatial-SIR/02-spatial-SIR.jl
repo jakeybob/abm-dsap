@@ -25,6 +25,7 @@ function init_model(;
     N = 1000, # number of agents
     I0 = 5, # initial number infected
     immovable = 0.1,  # fraction of immovable agents
+    immovable_mass = Inf,
     num_infected = 0,
 
     # disease proerties
@@ -57,7 +58,7 @@ function init_model(;
         pos = Tuple(rand(model.rng, 2))
         status = ind ≤ N - I0 ? :S : :I
         isimmovable = ind ≤ immovable * N
-        mass = isimmovable ? 1000 : 1.0
+        mass = isimmovable ? immovable_mass : 1.0
         vel = isimmovable ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
 
         add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
@@ -227,3 +228,33 @@ fig, ax, abmobs = abmplot(model;
     model_step! = model_step!,
     ac = colours)
 fig
+
+
+# COLLISION VELOCITY ####
+using DataFrames
+
+model_vel = init_model(immovable_mass = 1.0, immovable = 0.0, collide_physics = true)
+v_data, _ = run!(model_vel, agent_step!, model_step!, n_steps; adata = [:vel])
+v_data.abs_velocity = [sqrt(sum(v_data.vel[i].^2)) for i in 1:size(v_data)[1]]
+velocity_physics_true = combine(groupby(v_data, :step), :abs_velocity => mean)
+
+model_vel = init_model(immovable_mass = 1.0, immovable = 0.0, collide_physics = false)
+v_data, _ = run!(model_vel, agent_step!, model_step!, n_steps; adata = [:vel])
+v_data.abs_velocity = [sqrt(sum(v_data.vel[i].^2)) for i in 1:size(v_data)[1]]
+velocity_physics_false = combine(groupby(v_data, :step), :abs_velocity => mean)
+
+# agent velocities remain constant
+StatsPlots.plot(velocity_physics_false.step, velocity_physics_false.abs_velocity_mean)
+
+# agent velocities out of control
+StatsPlots.plot(velocity_physics_true.step, velocity_physics_true.abs_velocity_mean,
+yaxis=:log10)
+# first 100 steps...
+StatsPlots.plot(velocity_physics_true.step[1:100], velocity_physics_true.abs_velocity_mean[1:100],
+yaxis=:log10)
+
+# check there are no weird dying off effects
+model_vel = init_model(immovable_mass = 1.0, immovable = 0.0, collide_physics = true)
+abm_data_vel, _ = run!(model_vel, agent_step!, model_step!, n_steps; adata = to_collect) # run model and collect data; returned as abm_data
+abm_data_vel.alive_status  = abm_data_vel.infected_status + abm_data_vel.recovered_status + abm_data_vel.susceptible_status
+minimum(abm_data_vel.alive_status)
