@@ -32,7 +32,7 @@ function init_model(;
     infection_period = 200,
     reinfection_probability = 0.05,
     interaction_radius = 0.02,
-    death_rate = 0.05,
+    death_rate = 0.02,
     β = 0.4,
 
     # space/time properties (spatial extent assumed as unit square)
@@ -75,16 +75,33 @@ model = init_model()
 update!(agent) = agent.status == :I && (agent.steps_infected += 1)
 
 # if infected for long time then either kill or recover
+# function recover_or_die!(agent, model)
+#     if agent.steps_infected ≥ model.infection_period
+#         if rand(model.rng) ≤ model.death_rate
+#             kill_agent!(agent, model)
+#         else
+#             agent.status = :R
+#             agent.steps_infected = 0
+#         end
+#     end
+# end
+
 function recover_or_die!(agent, model)
-    if agent.steps_infected ≥ model.infection_period
+    killed = false
+    if (agent.status == :I) & (agent.steps_infected ≥ model.infection_period)
         if rand(model.rng) ≤ model.death_rate
             kill_agent!(agent, model)
-        else
+            killed = true
+        end
+    end
+
+    if (killed == false) & (agent.status == :I)
+        if rand(model.rng) < 0.005
             agent.status = :R
-            agent.steps_infected = 0
         end
     end
 end
+
 
 # combine these into agent_step()
 function agent_step!(agent, model)
