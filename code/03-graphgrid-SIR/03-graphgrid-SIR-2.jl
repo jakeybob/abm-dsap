@@ -7,13 +7,14 @@ using Agents.DataFrames, Agents.Graphs
 using Distributions: Poisson, DiscreteNonParametric
 using DrWatson: @dict
 using CairoMakie
+using LinearAlgebra: diagind
 
-@agent PoorSoul GraphAgent begin
-    days_infected::Int  # number of days since is infected
-    status::Symbol  # 1: S, 2: I, 3:R
+@agent Person GraphAgent begin
+    days_infected::Int 
+    status::Symbol 
 end
 
-function model_initiation(;
+function init_model(;
     Ns,
     migration_rates,
     β_und,
@@ -27,6 +28,8 @@ function model_initiation(;
 )
 
     rng = MersenneTwister(seed)
+
+    # throw error if following are not equal
     @assert length(Ns) ==
     length(Is) ==
     length(β_und) ==
@@ -56,7 +59,7 @@ function model_initiation(;
         death_rate
     )
     space = GraphSpace(complete_digraph(C))
-    model = ABM(PoorSoul, space; properties, rng)
+    model = ABM(Person, space; properties, rng)
 
     # Add initial individuals
     for city in 1:C, n in 1:Ns[city]
@@ -73,8 +76,6 @@ function model_initiation(;
     end
     return model
 end
-
-using LinearAlgebra: diagind
 
 function create_params(;
     C,
@@ -118,8 +119,9 @@ function create_params(;
     return params
 end
 
+
 params = create_params(C = 8, max_travel_rate = 0.01)
-model = model_initiation(; params...)
+model = init_model(; params...)
 
 function agent_step!(agent, model)
     migrate!(agent, model)
@@ -175,12 +177,13 @@ end
 
 using InteractiveDynamics
 using CairoMakie
+CairoMakie.activate!()
 abmobs = ABMObservable(model; agent_step!)
 
 infected_fraction(m, x) = count(m[id].status == :I for id in x) / length(x)
 infected_fractions(m) = [infected_fraction(m, ids_in_position(p, m)) for p in positions(m)]
 fracs = lift(infected_fractions, abmobs.model)
-color = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
+colour = lift(fs -> [cgrad(:inferno)[f] for f in fs], fracs)
 title = lift(
     (s, m) -> "step = $(s), infected = $(round(Int, 100infected_fraction(m, allids(m))))%",
     abmobs.s, abmobs.model
@@ -188,7 +191,7 @@ title = lift(
 
 fig = Figure(resolution = (600, 400))
 ax = Axis(fig[1, 1]; title, xlabel = "City", ylabel = "Population")
-barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, color)
+barplot!(ax, model.Ns; strokecolor = :black, strokewidth = 1, colour)
 fig
 
 record(fig, "covid_evolution.mp4"; framerate = 5) do io
@@ -203,7 +206,8 @@ end
 infected(x) = count(i == :I for i in x)
 recovered(x) = count(i == :R for i in x)
 
-model = model_initiation(; params...)
+
+model = init_model(; params...)
 
 to_collect = [(:status, f) for f in (infected, recovered, length)]
 data, _ = run!(model, agent_step!, 100; adata = to_collect)
