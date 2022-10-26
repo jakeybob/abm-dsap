@@ -19,7 +19,9 @@ end
 
 # DEFINE MODEL ####
 function init_model(;
-    map_path = OSM.test_map(),
+    # map_path = OSM.test_map(),
+    map_path = "maps/test.json",
+
 
     # agent properties
     N = 100, # number of agents
@@ -117,11 +119,11 @@ colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000"
 # output video
 begin
     CairoMakie.activate!()
-    model = init_model(speed=0.005)
+    model = init_model(speed=0.001)
     fps = 60
     duration = 10
-    abmvideo("osm_test.mp4", model, agent_step!;
-    title = "SIR test", framerate = fps, frames = fps*duration, ac=colours)
+    abmvideo("osm_test_glasgow.mp4", model, agent_step!;
+    title = "Glasgow High St OpenStreetMap test", framerate = fps, frames = fps*duration, ac=colours)
 end
 
 # output interactive
