@@ -25,6 +25,7 @@ Manifest.toml
 
 # Miscellaneous
 dsap_presentation_files/
+dsap_mid_presentation_files/
 
 .DS_Store
 *.html
@@ -35,3 +36,4 @@ dsap_presentation_files/
 
 # Allows
 !docs/intro_presentation/*.mp4
+!docs/mid_point_presentation/pics/*.mp4
