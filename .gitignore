@@ -33,6 +33,9 @@ dsap_mid_presentation_files/
 *.mp4
 .vscode/settings.json
 .ipynb_checkpoints
+*.osm
+*.osm.cache
+**/maps/*.json
 
 # Allows
 !docs/intro_presentation/*.mp4
