@@ -20,13 +20,13 @@ format:
 ## {background-color="#7030A0"}
 
 <p>&nbsp;</p>
-[Introduction]{style="color: white; font-weight: bold; font-size: 80px"}
+[Recap]{style="color: white; font-weight: bold; font-size: 80px"}
 <p>&nbsp;</p>
-[Outputs]{style="color: white; font-weight: bold; font-size: 80px"}
+[Progress]{style="color: white; font-weight: bold; font-size: 80px"}
 <p>&nbsp;</p>
-[Benefits & Goals]{style="color: white; font-weight: bold; font-size: 80px"}
+[Changes]{style="color: white; font-weight: bold; font-size: 80px"}
 <p>&nbsp;</p>
-[Conclusion]{style="color: white; font-weight: bold; font-size: 80px"}
+[Next Steps...]{style="color: white; font-weight: bold; font-size: 80px"}
 
 ::: {.notes}
 **Introduction:** background on what agent based modelling is; PROS and CONS
@@ -37,7 +37,7 @@ format:
 :::
 
 
-# Introduction {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Recap {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
 
@@ -68,6 +68,7 @@ TYPICALLY
 TOP DOWN methodology where you set population level parameters
 
 :::
+
 
 ## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
@@ -115,118 +116,97 @@ in this simple model we can see a continous-like behaviour emerge when using man
 
 ::: {style="font-size: 1.25em"}
 
-**<u>ABM advantages</u>**
+**<u>Project Proposal</u>**
 
-* can model *heterogenous* populations
-  - individiual level age/sex etc
-  - time dependent individiual infectivity
-<p>&nbsp;</p>
+* this
 
-* include feedback loops, emergent behaviour
-  - readmission/reinfection
-  - *flocking*
-  - clustering, small scale effects
+* something else
 
+* and something else too
+
+:::
+
+This is some text at the bottom for some reason
+
+::: {.notes}
+Some notes for this section
+:::
+
+
+# Progress {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {style="font-size: 1.25em"}
+* investigated `Agents.jl` library
+* produced working 0D / 2D agent based disease models
+
+:::
+
+::: {layout-ncol=2}
+![](pics/abm_test_false.mp4)
+
+![](pics/osm_test_glasgow.mp4)
 :::
 
 ::: {.notes}
-**Heterogenous** – ie populations where every person is different and discrete
-
-**Feedback loops** – people more likely to be readmitted
-
-**Emergent behaviour** – flocking, clustering
-
-**Clustering / small scale effects** – can have highly localised pocket of high transmission (superspreader)
-
-ABMs good at including complex societal interactions
-
+Some notes for this section
 :::
 
-# Outputs {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
-1. robust [Julia](https://julialang.org/) codebase (using [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/) library) for infectious disease ABM…
+## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
-2. interactive [Jupyter](https://jupyter.org/) notebook/s... (**MVP**)
+::: {style="font-size: 1.25em"}
+&nbsp;
+:::
 
-3. web *API* service, or (less likely) web app...
+::: {layout-ncol=2}
+![](pics/pic.png)
 
-![](agents.mp4){fig-align="center"}
+* mistakes may have occurred
+* lessons learned
+* now compiling example notebooks / MVP
+* started looking at how to narrow down 2D model scope / API
+:::
 
 ::: {.notes}
-**OUTPUTS**
-
-1. code that can model a variety of ABM disease transmission scenarios
-
-2. interactive notebook
-
-stretch goals...
-
-3. web API service -- a tool people can query; or web app (see fancy animation)
+Some notes for this section
 :::
 
 
-# {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Changes {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
-**Potential Extensions**
+::: {style="font-size: 1.25em"}
+ * initial focus more towards e.g. interactive outputs and 
 
-* user definable parameters such as deprivation/disease (type, $R_0$)
+ * that
 
-* time dependent parameters (social distancing, lockdown)
+ * next thing
+:::
 
-* geospatial / 2D analysis (OpenStreetMap integration?)
-
-![](sir_anim.mp4){fig-align="center"}
+Why make these changes?
 
 ::: {.notes}
-other potential things to try if time allows....
+Some notes for this section
 :::
 
 
-# Benefits & Goals {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Next Steps {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
-**PHS**
+::: {style="font-size: 1.25em"}
+* wrap up MVP (user interactive notebooks, deployed via e.g. [binder](https://mybinder.org/))
 
-* experience with different modelling paradigm (pros + cons)
+* further develop 2D model/s (explore grid/graph types)
 
-* inherit code + expertise useful for more public health problems
+* deploy as queryable service (AWS?)
 
-* experience with / evaluation of Julia language, libraries and tools
-
-**Public**
-
-* publicly available code ([GitHub](https://github.com/jakeybob/abm-dsap))
-
-* interactive element
-
-* (relatively) easy to intuit / understand
+* write up docs etc
+:::
 
 ::: {.notes}
-**PHS**
-ABM pros – already defined
-ABM cons – not sure! Potentially computationally expensive?
-
-*rest in slide*
-
-**PUBLIC**
-code / intereactive / intuitive
-
+Some notes for this section
 :::
 
 
-# Conclusion {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
-
-::: {style="font-size: 1.4em"}
-
-* agent based models can be both useful and informative – but currently underused in public health
-
-* this project allows initial exploration of this type of modelling + tools
-
-* benefits to both PHS and public
-
-:::
-
-
-## {background-color="#002060" transition="zoom"}
+# {background-color="#002060" transition="zoom"}
 
 [Questions...?]{style="color: white; font-weight: bold; font-size: 120px"}
 
