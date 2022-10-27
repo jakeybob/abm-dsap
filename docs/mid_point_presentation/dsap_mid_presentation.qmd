@@ -29,11 +29,13 @@ format:
 [Next Steps...]{style="color: white; font-weight: bold; font-size: 80px"}
 
 ::: {.notes}
-**Introduction:** background on what agent based modelling is; PROS and CONS
+**Recap:** quick reminder on what my project proposal was, what agent based modelling is and why it's useful
 
-**Outputs:** what the end products / potential end products of the project are
+**Progress:** what have I been up to -- what has been done so far?
 
-**Benefits & Goals:** why bother? How does this project benefit PHS or the public?
+**Changes:** what has changed in terms of goals etc since week 1, and why?
+
+**Next Steps:** what I expect to be getting on with next
 :::
 
 
@@ -44,7 +46,6 @@ format:
 **<u>Traditional</u>** (e.g. SEIR models)
 
 * large sets of differential equations solved numerically
-
 
 * global outcomes based on system-wide behaviours
 
@@ -78,7 +79,6 @@ TOP DOWN methodology where you set population level parameters
 
 * individual agents given *behaviours* and *attributes*
 
-
 * allowed to *interact*, make decisions $\rightarrow$ evolve; e.g. become infected, admitted to hospital etc
 
 :::
@@ -98,16 +98,14 @@ ABMs take a **BOTTOM UP** approach...
 
 Individual agents; time stepped
 
+PLOTS show that ABMs replicate continuous models for *large* numbers of agents who all have the *same* properties
+
+
 Might say 5% of people have flu for continuous approach, or *these* 50 out of 1000 have flu
-
-**PLOTS**
-
-Agents given
 
 $\Beta$ = probability of a contact causing an infection
 c = poisson expectation of number of expected contacts in each time step
 
-in this simple model we can see a continous-like behaviour emerge when using many agents
 
 :::
 
@@ -118,18 +116,18 @@ in this simple model we can see a continous-like behaviour emerge when using man
 
 **<u>Project Proposal</u>**
 
-* this
-
-* something else
-
-* and something else too
+* produce Julia code to model variety of ABM disease transmission scenarios
+<p>&nbsp;</p>
+* interactive notebooks and/or web apps (allow users to create their own mopdels)
+<p>&nbsp;</p>
+* stretch goal: web API service
 
 :::
 
-This is some text at the bottom for some reason
-
 ::: {.notes}
-Some notes for this section
+* produce Julia code to model variety of ABM disease transmission scenarios
+* interactive notebooks and/or web apps (allow users to create their own mopdels)
+* stretch goal: web API service
 :::
 
 
@@ -148,7 +146,8 @@ Some notes for this section
 :::
 
 ::: {.notes}
-Some notes for this section
+* investigated the capabilities of the Agents.jl library
+* produced working agent based disease models
 :::
 
 
@@ -162,47 +161,61 @@ Some notes for this section
 ![](pics/pic.png)
 
 * mistakes may have occurred
+<p>&nbsp;</p>
 * lessons learned
-* now compiling example notebooks / MVP
-* started looking at how to narrow down 2D model scope / API
+<p>&nbsp;</p>
+* now compiling example notebooks for MVP
+<p>&nbsp;</p>
+* started looking at how to narrow scopr for 2D models
 :::
 
 ::: {.notes}
-Some notes for this section
+* mistakes: accidentally messed up the agent collision physics so they continually accelerated past the speed of light
+* ended up being useful as to debug that I had to figure out how to extract information from the model while running
+* now compiling example notebooks for MVP
+* started looking at how to narrow scopr for 2D models
 :::
 
 
 # Changes {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
- * initial focus more towards e.g. interactive outputs and 
+ * **initial focus** $\Rightarrow$ interactive notebooks and apps 
+<p>&nbsp;</p>
 
- * that
+ * **now** $\Rightarrow$ separate *visualisation* from *simulation*
+<p>&nbsp;</p>
 
- * next thing
+ * allows wider availability / interoperability
+<p>&nbsp;</p>
+
+ * (also more manageable in retrospect)
 :::
-
-Why make these changes?
 
 ::: {.notes}
-Some notes for this section
+initial focus: had more emphasis on notebook and interactive app outputs
+
+now: still have some notebooks, but shifting away from interactive web apps and hive off the simulation aspect -- so aim to have a web service that anyone can query from any environment (R, Python etc)
 :::
 
 
-# Next Steps {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Next Steps... {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
-* wrap up MVP (user interactive notebooks, deployed via e.g. [binder](https://mybinder.org/))
-
-* further develop 2D model/s (explore grid/graph types)
-
+* wrap up MVP (user interactive notebooks, deploy via e.g. [binder](https://mybinder.org/))
+<p>&nbsp;</p>
+* further develop 2D models (explore grid/graph types)
+<p>&nbsp;</p>
 * deploy as queryable service (AWS?)
-
-* write up docs etc
+<p>&nbsp;</p>
+* write up docs etc!
 :::
 
 ::: {.notes}
-Some notes for this section
+* wrap up MVP (user interactive notebooks, deploy via e.g. [binder](https://mybinder.org/))
+* further develop 2D models (explore grid/graph types)
+* deploy as queryable service (AWS?)
+* write up docs etc!
 :::
 
 
