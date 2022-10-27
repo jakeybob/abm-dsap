@@ -118,7 +118,7 @@ c = poisson expectation of number of expected contacts in each time step
 
 * produce Julia code to model variety of ABM disease transmission scenarios
 <p>&nbsp;</p>
-* interactive notebooks and/or web apps (allow users to create their own mopdels)
+* interactive notebooks and/or web apps (allow users to create their own models)
 <p>&nbsp;</p>
 * stretch goal: web API service
 
@@ -126,7 +126,7 @@ c = poisson expectation of number of expected contacts in each time step
 
 ::: {.notes}
 * produce Julia code to model variety of ABM disease transmission scenarios
-* interactive notebooks and/or web apps (allow users to create their own mopdels)
+* interactive notebooks and/or web apps (allow users to create their own models)
 * stretch goal: web API service
 :::
 
@@ -166,14 +166,14 @@ c = poisson expectation of number of expected contacts in each time step
 <p>&nbsp;</p>
 * now compiling example notebooks for MVP
 <p>&nbsp;</p>
-* started looking at how to narrow scopr for 2D models
+* started looking at how to narrow scope for 2D models
 :::
 
 ::: {.notes}
 * mistakes: accidentally messed up the agent collision physics so they continually accelerated past the speed of light
 * ended up being useful as to debug that I had to figure out how to extract information from the model while running
 * now compiling example notebooks for MVP
-* started looking at how to narrow scopr for 2D models
+* started looking at how to narrow scope for 2D models
 :::
 
 
