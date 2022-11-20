@@ -1,125 +1,107 @@
-# SETUP ####
 cd(@__DIR__)
 import Pkg
 Pkg.activate(".")
 
-# using Agents, Random, InteractiveDynamics, GLMakie, CairoMakie, StatsPlots
-
-using Agents
-space = GridSpaceSingle((10, 10); periodic = false)
-
-mutable struct SchellingAgent <: AbstractAgent
-    id::Int             # The identifier number of the agent
-    pos::NTuple{2, Int} # The x, y location of the agent on a 2D grid
-    mood::Bool          # whether the agent is happy in its position. (true = happy)
-    group::Int          # The group of the agent, determines mood as it interacts with neighbors
-end
-
-@agent SchellingAgent GridAgent{2} begin
-    mood::Bool
-    group::Int
-end
-
-properties = Dict(:min_to_be_happy => 3)
-schelling = ABM(SchellingAgent, space; properties)
-
-schelling2 = ABM(
-    SchellingAgent,
-    space;
-    properties = properties,
-    scheduler = Schedulers.ByProperty(:group),
-)
-
-
-using Random # for reproducibility
-function initialize(; numagents = 320, griddims = (20, 20), min_to_be_happy = 3, seed = 125)
-    space = GridSpaceSingle(griddims, periodic = false)
-    properties = Dict(:min_to_be_happy => min_to_be_happy)
-    rng = Random.MersenneTwister(seed)
-    model = ABM(
-        SchellingAgent, space;
-        properties, rng, scheduler = Schedulers.Randomly()
-    )
-
-    # populate the model with agents, adding equal amount of the two types of agents
-    # at random positions in the model
-    for n in 1:numagents
-        agent = SchellingAgent(n, (1, 1), false, n < numagents / 2 ? 1 : 2)
-        add_agent_single!(agent, model)
-    end
-    return model
-end
-
-
-function agent_step!(agent, model)
-    minhappy = model.min_to_be_happy
-    count_neighbors_same_group = 0
-    # For each neighbor, get group and compare to current agent's group
-    # and increment `count_neighbors_same_group` as appropriately.
-    # Here `nearby_agents` (with default arguments) will provide an iterator
-    # over the nearby agents one grid point away, which are at most 8.
-    for neighbor in nearby_agents(agent, model)
-        if agent.group == neighbor.group
-            count_neighbors_same_group += 1
-        end
-    end
-    # After counting the neighbors, decide whether or not to move the agent.
-    # If count_neighbors_same_group is at least the min_to_be_happy, set the
-    # mood to true. Otherwise, move the agent to a random position, and set
-    # mood to false.
-    if count_neighbors_same_group ≥ minhappy
-        agent.mood = true
-    else
-        agent.mood = false
-        move_agent_single!(agent, model)
-    end
-    return
-end
-
-model = initialize()
-
-step!(model, agent_step!, 3)
-
+using Random, Agents, Agents.Pathfinding
 using InteractiveDynamics
-using CairoMakie # choosing a plotting backend
+using GLMakie , CairoMakie
 
-groupcolor(a) = a.group == 1 ? :blue : :orange
-groupmarker(a) = a.group == 1 ? :circle : :rect
-figure, _ = abmplot(model; ac = groupcolor, am = groupmarker, as = 10)
-figure # returning the figure displays it
+# DEFINE AGENT ####
+@agent Person GridAgent{2} begin
+    mass::Float64 # set this to Inf and vel to 0,0 for immovable agent; is assumed 1 if not set for elastic_collisions
+    steps_infected::Int  # number of model steps since infection
+    status::Symbol  # disease status, S, I, R
+    β::Float64 # infectivity (currently inherited from global model params)
+    num_infected::Int # number infected, for calculating effective R0
+end
 
-adata = [:pos, :mood, :group]
+# DEFINE SPACES ####
+room = BitArray([  
+    0 0 0 0 0 0 0 0 0 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 0 0 0 0 0 0 0 0 0;])
 
-model = initialize()
-data, _ = run!(model, agent_step!, 5; adata)
-data[1:10, :] # print only a few rows
+room2 = BitArray([  
+    0 0 0 0 0 0 0 0 0 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 0 0 0 1 1 0 0 0 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 0;
+    0 0 0 0 0 0 0 0 0 0;])
 
-x(agent) = agent.pos[1]
-model = initialize()
-adata = [x, :mood, :group]
-data, _ = run!(model, agent_step!, 5; adata)
-data[1:10, :]
+function init_model(bit_space;
+    # agent properties
+    N = 10, # number of agents
+    I0 = 1, # initial number infected
+    # immovable = 0.1,  # fraction of immovable agents
+    # immovable_mass = Inf,
+    num_infected = 0,
 
-using Statistics: mean
-model = initialize();
-adata = [(:mood, sum), (x, mean)]
-data, _ = run!(model, agent_step!, 5; adata)
-data
+    # disease proerties
+    infection_period = 200,
+    reinfection_probability = 0.05,
+    interaction_radius = 0.02,
+    death_rate = 0.02,
+    β = 0.4,
 
-parange = Dict(:min_to_be_happy => 0:8)
-
-adata = [(:mood, sum), (x, mean)]
-alabels = ["happy", "avg. x"]
-
-model = initialize(; numagents = 300) # fresh model, noone happy
-
-using GLMakie # using a different plotting backend that enables interactive plots
-GLMakie.activate!()
-
-using
-figure, adf, mdf = abmexploration(
-    model, agent_step!, dummystep, parange;
-    ac = groupcolor, am = groupmarker, as = 10,
-    adata, alabels
+    # space/time properties (spatial extent assumed as unit square)
+    Δt = 1.0,
+    seed = 1234
 )
+    # dictionary of above properties to be applied globally to model
+    properties = Dict(:infection_period => infection_period, 
+        :reinfection_probability => reinfection_probability, 
+        :death_rate => death_rate,
+        :interaction_radius => interaction_radius,
+        :Δt => Δt)
 
+    space = GridSpace(size(bit_space); periodic = false)
+    pathfinder = AStar(space; walkmap = bit_space, diagonal_movement = true)
+    model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
+
+    # Add initial individuals
+    # for ind in 1:N
+    #     pos = Tuple(rand(model.rng, 2))
+    #     status = ind ≤ N - I0 ? :S : :I
+    #     isimmovable = ind ≤ immovable * N
+    #     mass = isimmovable ? immovable_mass : 1.0
+    #     vel = isimmovable ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
+
+    #     add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
+    # end
+
+    test_person = Person(1, (3, 3), 1, 0, :S, β, 0)
+    add_agent_pos!(test_person, model)
+    plan_route!(test_person, (7, 7), pathfinder)
+
+    return model, pathfinder
+end 
+
+model, pathfinder = init_model(room2)
+agent_step!(agent, model) = move_along_route!(agent, model, pathfinder)
+
+CairoMakie.activate!()
+colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
+fig, _ = abmplot(model; ac = colours, heatarray = _ -> pathfinder.walkmap)
+fig
+
+
+GLMakie.activate!()
+model, pathfinder = init_model(room2)
+fig, ax, abmobs = abmplot(model;
+    agent_step! = agent_step!, 
+    # model_step! = model_step!,
+    ac = colours,
+    heatarray = _ -> pathfinder.walkmap)
+fig
