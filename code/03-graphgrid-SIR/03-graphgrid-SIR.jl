@@ -4,7 +4,8 @@ Pkg.activate(".")
 
 using Random, Agents, Agents.Pathfinding
 using InteractiveDynamics
-using GLMakie , CairoMakie
+using GLMakie, CairoMakie
+using StatsBase
 
 # DEFINE AGENT ####
 @agent Person GridAgent{2} begin
@@ -34,7 +35,7 @@ room2 = BitArray([
     0 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 0;
     0 0 0 0 1 1 0 0 0 0;
-    0 1 1 1 1 1 1 1 1 0;
+    0 0 0 0 1 1 0 0 0 0;
     0 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 0;
@@ -44,8 +45,6 @@ function init_model(bit_space;
     # agent properties
     N = 10, # number of agents
     I0 = 1, # initial number infected
-    # immovable = 0.1,  # fraction of immovable agents
-    # immovable_mass = Inf,
     num_infected = 0,
 
     # disease proerties
@@ -83,7 +82,7 @@ function init_model(bit_space;
 
     test_person = Person(1, (3, 3), 1, 0, :S, β, 0)
     add_agent_pos!(test_person, model)
-    plan_route!(test_person, (7, 7), pathfinder)
+    plan_route!(test_person, (8, 3), pathfinder)
 
     return model, pathfinder
 end 
@@ -105,3 +104,10 @@ fig, ax, abmobs = abmplot(model;
     ac = colours,
     heatarray = _ -> pathfinder.walkmap)
 fig
+
+N = 10
+room_size = size(room2)
+num_points = room_size[1]*room_size[2]
+valid_spaces = (room2 .== 1)[1:num_points]
+available_spaces = (1:num_points)[valid_spaces]
+positions_to_use = sample(available_spaces, N)
