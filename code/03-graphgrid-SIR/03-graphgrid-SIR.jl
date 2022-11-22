@@ -80,9 +80,27 @@ function init_model(bit_space;
     #     add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
     # end
 
-    test_person = Person(1, (3, 3), 1, 0, :S, β, 0)
-    add_agent_pos!(test_person, model)
-    plan_route!(test_person, (8, 3), pathfinder)
+    # N = 10
+    room_size = size(bit_space)
+    cols = room_size[2]
+    rows = room_size[1]
+    num_points = rows*cols
+    valid_spaces = (bit_space .== 1)[1:num_points]
+    available_spaces = (1:num_points)[valid_spaces]
+    positions_to_use = sample(available_spaces, N)
+    index2tuple(pos) = (rem(pos, cols), div(pos, cols))
+    positions_to_use = index2tuple.(positions_to_use)
+    
+    for ind in 1:N
+        pos = positions_to_use[ind]
+        agent = Person(ind, pos, 1, 0, :S, β, 0)
+        add_agent_pos!(agent, model)
+        plan_route!(agent, (8, 3), pathfinder)
+    end
+
+    # test_person = Person(1, positions_to_use[1], 1, 0, :S, β, 0)
+    # add_agent_pos!(test_person, model)
+    # plan_route!(test_person, (8, 3), pathfinder)
 
     return model, pathfinder
 end 
@@ -107,7 +125,12 @@ fig
 
 N = 10
 room_size = size(room2)
-num_points = room_size[1]*room_size[2]
+cols = room_size[2]
+rows = room_size[1]
+num_points = rows*cols
 valid_spaces = (room2 .== 1)[1:num_points]
 available_spaces = (1:num_points)[valid_spaces]
 positions_to_use = sample(available_spaces, N)
+index2tuple(pos) = (div(pos, cols), rem(pos, cols))
+positions_to_use = index2tuple.(positions_to_use)
+
