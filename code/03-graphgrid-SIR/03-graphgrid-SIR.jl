@@ -17,7 +17,7 @@ using StatsBase
 end
 
 # DEFINE SPACES ####
-room = BitArray([  
+room = permutedims(BitArray([  
     0 0 0 0 0 0 0 0 0 0;
     0 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 0;
@@ -27,19 +27,19 @@ room = BitArray([
     0 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 0;
-    0 0 0 0 0 0 0 0 0 0;])
+    0 0 0 0 0 0 0 0 0 0;]))
 
-room2 = BitArray([  
-    0 0 0 0 0 0 0 0 0 0;
-    0 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 0;
-    0 0 0 0 1 1 0 0 0 0;
-    0 0 0 0 1 1 0 0 0 0;
-    0 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 0;
-    0 0 0 0 0 0 0 0 0 0;])
+room2 = permutedims(BitArray([  
+    0 0 0 0 0 0 0 0 0 0 0;
+    0 1 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 1 0;
+    0 0 0 0 1 1 0 0 0 0 0;
+    0 0 0 0 1 1 0 0 0 0 0;
+    0 1 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 1 0;
+    0 1 1 1 1 1 1 1 1 1 0;
+    0 0 0 0 0 0 0 0 0 0 0;]))
 
 function init_model(bit_space;
     # agent properties
@@ -80,15 +80,14 @@ function init_model(bit_space;
     #     add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
     # end
 
-    # N = 10
     room_size = size(bit_space)
-    cols = room_size[2]
-    rows = room_size[1]
+    cols = room_size[1]
+    rows = room_size[2]
     num_points = rows*cols
     valid_spaces = (bit_space .== 1)[1:num_points]
     available_spaces = (1:num_points)[valid_spaces]
     positions_to_use = sample(available_spaces, N)
-    index2tuple(pos) = (rem(pos, cols), div(pos, cols))
+    index2tuple(pos) = (rem(pos, cols), div(pos, cols)+1)
     positions_to_use = index2tuple.(positions_to_use)
     
     for ind in 1:N
@@ -122,15 +121,3 @@ fig, ax, abmobs = abmplot(model;
     ac = colours,
     heatarray = _ -> pathfinder.walkmap)
 fig
-
-N = 10
-room_size = size(room2)
-cols = room_size[2]
-rows = room_size[1]
-num_points = rows*cols
-valid_spaces = (room2 .== 1)[1:num_points]
-available_spaces = (1:num_points)[valid_spaces]
-positions_to_use = sample(available_spaces, N)
-index2tuple(pos) = (div(pos, cols), rem(pos, cols))
-positions_to_use = index2tuple.(positions_to_use)
-
