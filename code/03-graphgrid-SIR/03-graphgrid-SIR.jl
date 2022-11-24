@@ -70,23 +70,13 @@ function init_model(bit_space;
     model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
 
     # Add initial individuals
-    # for ind in 1:N
-    #     pos = Tuple(rand(model.rng, 2))
-    #     status = ind ≤ N - I0 ? :S : :I
-    #     isimmovable = ind ≤ immovable * N
-    #     mass = isimmovable ? immovable_mass : 1.0
-    #     vel = isimmovable ? (0.0, 0.0) : sincos(2π * rand(model.rng)) .* speed
-
-    #     add_agent!(pos, model, vel, mass, 0, status, β, num_infected)
-    # end
-
     room_size = size(bit_space)
     cols = room_size[1]
     rows = room_size[2]
     num_points = rows*cols
     valid_spaces = (bit_space .== 1)[1:num_points]
     available_spaces = (1:num_points)[valid_spaces]
-    positions_to_use = sample(available_spaces, N)
+    positions_to_use = sample(available_spaces, N; replace=false)
     index2tuple(pos) = (rem(pos, cols), div(pos, cols)+1)
     positions_to_use = index2tuple.(positions_to_use)
     
@@ -96,10 +86,6 @@ function init_model(bit_space;
         add_agent_pos!(agent, model)
         plan_route!(agent, (8, 3), pathfinder)
     end
-
-    # test_person = Person(1, positions_to_use[1], 1, 0, :S, β, 0)
-    # add_agent_pos!(test_person, model)
-    # plan_route!(test_person, (8, 3), pathfinder)
 
     return model, pathfinder
 end 
