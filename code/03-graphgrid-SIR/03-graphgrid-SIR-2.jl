@@ -14,6 +14,7 @@ using StatsBase
     β::Float64 # infectivity (currently inherited from global model params)
     num_infected::Int # number infected, for calculating effective R0
     journey_type::Symbol # :none, :exit, :bathroom, :kitchen
+    pos_initial::Tuple # initial position for agent to make return trips to
 end
 
 # DEFINE SPACE ####
@@ -28,6 +29,10 @@ room = permutedims(BitArray([
     0 1 1 1 1 1 1 1 1 1 0;
     0 1 1 1 1 1 1 1 1 1 0;
     0 0 0 0 0 0 0 0 0 0 0;]))
+
+bathroom_pos = (8, 3)
+kitchen_pos = (8, 2)
+exit_pos = (9, 2)
 
 function init_model(bit_space;
     # agent properties
@@ -44,7 +49,10 @@ function init_model(bit_space;
 
     # space/time properties (spatial extent assumed as unit square)
     Δt = 1.0,
-    seed = 1234
+    seed = 1234,
+    bathroom_weight = 0.05,
+    kitchen_weight = 0.05,
+    exit_weight = 0.01
 )
     # dictionary of above properties to be applied globally to model
     properties = Dict(:infection_period => infection_period, 
@@ -70,10 +78,43 @@ function init_model(bit_space;
     
     for ind in 1:N
         pos = positions_to_use[ind]
-        agent = Person(ind, pos, 1, 0, :S, β, 0)
+        agent = Person(ind, pos, 0, :S, β, 0, :none, pos)
         add_agent_pos!(agent, model)
-        plan_route!(agent, (8, 3), pathfinder)
     end
 
     return model, pathfinder
 end 
+
+
+function agent_step!(agent, model)
+    choice = rand()
+    if agent.journey_type == :none && (choice < 0.1)
+        agent.journey_type = :bathroom
+        plan_route!(agent, (8, 3), pathfinder)
+    end
+
+    # if reached bathroom, thehn head back
+    if agent.journey_type == :bathroom && agent.pos == (8, 3)
+        plan_route!(agent, agent.pos_initial, pathfinder)
+    end
+
+    # if on a journey, then move. If arrived back home, then not on a journey.
+    if agent.journey_type != :none
+        move_along_route!(agent, model, pathfinder)
+        if agent.pos == agent.pos_initial
+            agent.journey_type = :none 
+        end
+    end
+end
+
+
+
+GLMakie.activate!()
+colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
+model, pathfinder = init_model(room)
+fig, ax, abmobs = abmplot(model;
+    agent_step! = agent_step!, 
+    # model_step! = model_step!,
+    ac = colours,
+    heatarray = _ -> pathfinder.walkmap)
+fig
