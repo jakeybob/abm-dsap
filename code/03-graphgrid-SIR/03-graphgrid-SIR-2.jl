@@ -35,6 +35,7 @@ kitchen_pos = (2, 2)
 exit_pos = (10, 9)
 
 function init_model(bit_space;
+    step = 0,
     # agent properties
     N = 10, # number of agents
     I0 = 1, # initial number infected
@@ -53,7 +54,8 @@ function init_model(bit_space;
     bathroom_weight = 0.05,
     kitchen_weight = 0.05,
     exit_weight = 0.01,
-    journey_weights = Weights([bathroom_weight, kitchen_weight, exit_weight, 1 - (bathroom_weight + kitchen_weight + exit_weight)])
+    none_weight = 1,
+    journey_weights = Weights([bathroom_weight, kitchen_weight, exit_weight, none_weight])
 )
     # dictionary of above properties to be applied globally to model
     properties = Dict(:infection_period => infection_period, 
@@ -61,7 +63,8 @@ function init_model(bit_space;
         :death_rate => death_rate,
         :interaction_radius => interaction_radius,
         :Δt => Δt,
-        :journey_weights => journey_weights)
+        :journey_weights => journey_weights,
+        :step => step)
 
     space = GridSpace(size(bit_space); periodic = false)
     pathfinder = AStar(space; walkmap = bit_space, diagonal_movement = true)
@@ -72,7 +75,6 @@ function init_model(bit_space;
     cols = room_size[1]
     rows = room_size[2]
     num_points = rows*cols
-    # valid_spaces = (bit_space .== 1)[1:num_points]
     valid_spaces = (bit_space .== 1)
     valid_spaces[bathroom_pos[1], bathroom_pos[2]] = false
     valid_spaces[kitchen_pos[1], kitchen_pos[2]] = false
@@ -122,12 +124,16 @@ function agent_step!(agent, model)
     end
 end
 
+function model_step!(model)
+    model.step = model.step + 1
+end
+
 GLMakie.activate!()
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
 model, pathfinder = init_model(room)
 fig, ax, abmobs = abmplot(model;
     agent_step! = agent_step!, 
-    # model_step! = model_step!,
+    model_step! = model_step!,
     ac = colours,
     heatarray = _ -> pathfinder.walkmap)
 fig
