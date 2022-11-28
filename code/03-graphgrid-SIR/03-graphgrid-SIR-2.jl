@@ -42,10 +42,10 @@ function init_model(bit_space;
     num_infected = 0,
 
     # disease proerties
-    infection_period = 200,
-    reinfection_probability = 0.05,
+    # infection_period = 200,
+    # reinfection_probability = 0.05,
     interaction_radius = 0.02,
-    death_rate = 0.02,
+    # death_rate = 0.02,
     β = 0.4,
 
     # space/time properties (spatial extent assumed as unit square)
@@ -58,9 +58,10 @@ function init_model(bit_space;
     journey_weights = Weights([bathroom_weight, kitchen_weight, exit_weight, none_weight])
 )
     # dictionary of above properties to be applied globally to model
-    properties = Dict(:infection_period => infection_period, 
-        :reinfection_probability => reinfection_probability, 
-        :death_rate => death_rate,
+    properties = Dict(
+        # :infection_period => infection_period, 
+        # :reinfection_probability => reinfection_probability, 
+        # :death_rate => death_rate,
         :interaction_radius => interaction_radius,
         :Δt => Δt,
         :journey_weights => journey_weights,
@@ -87,7 +88,8 @@ function init_model(bit_space;
     
     for ind in 1:N
         pos = positions_to_use[ind]
-        agent = Person(ind, pos, 0, :S, β, 0, :none, pos)
+        status = ind ≤ N - I0 ? :S : :I
+        agent = Person(ind, pos, 0, status, β, num_infected, :none, pos)
         add_agent_pos!(agent, model)
     end
 
@@ -96,7 +98,7 @@ end
 
 function agent_step!(agent, model)
     # if at desk then choose to either stay there or start a journey
-    # if journey chosen, then plot route
+    # if journey chosen, then plan route
     if agent.journey_type == :none
         agent.journey_type = sample([:bathroom, :kitchen, :exit, :none], model.properties[:journey_weights])
         if agent.journey_type == :bathroom
@@ -115,6 +117,18 @@ function agent_step!(agent, model)
         plan_route!(agent, agent.pos_initial, pathfinder)
     end
 
+    # infect surrounding agents
+    if agent.status == :I
+        # for nearby agents, infect if they are not currently infected, 
+        # but dependent on our infected agent's beta
+        for nearby_agent in nearby_ids(agent, model, model.interaction_radius)
+            if (rand(model.rng) > agent.β) & (model[nearby_agent].status != :I)
+                model[nearby_agent].status = :I
+                agent.num_infected += 1
+            end
+        end
+    end
+
     # if on a journey, then move. If arrived back home, then not on a journey
     if agent.journey_type != :none
         move_along_route!(agent, model, pathfinder)
@@ -122,19 +136,35 @@ function agent_step!(agent, model)
             agent.journey_type = :none 
         end
     end
+
 end
 
 function model_step!(model)
-    model.step = model.step + 1
+    model.step += 1
 end
 
-GLMakie.activate!()
-colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
-model, pathfinder = init_model(room)
-fig, ax, abmobs = abmplot(model;
-    agent_step! = agent_step!, 
-    model_step! = model_step!,
-    ac = colours,
-    heatarray = _ -> pathfinder.walkmap)
-fig
 
+colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
+model, pathfinder = init_model(room; none_weight = 50, N = 20, I0 = 2, interaction_radius = 1)
+
+# GLMakie.activate!()
+# fig, ax, abmobs = abmplot(model;
+#     agent_step! = agent_step!, 
+#     model_step! = model_step!,
+#     ac = colours,
+#     heatarray = _ -> pathfinder.walkmap)
+# fig
+
+abmvideo(
+    joinpath("pics", "test.mp4"),
+    model,
+    agent_step!,
+    model_step!,
+    figurekwargs = (resolution=(700,700),),
+    frames=200,
+    framerate=30,
+    ac = colours,
+    as=11,
+    heatarray = _ -> pathfinder.walkmap,
+    add_colorbar = false,
+)
