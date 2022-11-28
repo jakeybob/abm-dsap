@@ -26,6 +26,7 @@ Manifest.toml
 # Miscellaneous
 dsap_presentation_files/
 dsap_mid_presentation_files/
+dsap_end_presentation_files/
 
 .DS_Store
 *.html
@@ -36,6 +37,7 @@ dsap_mid_presentation_files/
 *.osm
 *.osm.cache
 **/maps/*.json
+*.bmp
 
 # Allows
 !docs/intro_presentation/*.mp4
