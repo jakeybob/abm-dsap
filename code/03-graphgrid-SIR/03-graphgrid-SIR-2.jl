@@ -67,7 +67,7 @@ function init_model(bit_space;
         :journey_weights => journey_weights,
         :step => step)
 
-    space = GridSpace(size(bit_space); periodic = false)
+    space = GridSpace(size(bit_space); periodic = false, metric = :euclidean)
     pathfinder = AStar(space; walkmap = bit_space, diagonal_movement = true)
     model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
 
