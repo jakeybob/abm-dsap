@@ -26,18 +26,34 @@ bathroom_pos = (940, 890)
 kitchen_pos = (770, 730)
 exit_pos = (860, 200)
 
+function combos(verts, horizs)
+    points = size(verts)[1] * size(horizs)[1]
+    out = Vector{Tuple{Int64, Int64}}(undef, points)
+    c = 1
+    for i in eachindex(horizs) , j in eachindex(verts)
+        out[c] = (horizs[i], verts[j])
+        c+=1
+    end
+    return out
+end
+
+desk_bank_1 = combos([130, 260, 300, 430, 470, 600, 640, 770, 810, 940], [50, 130, 210])
+desk_bank_2 = combos([300, 430, 470, 600, 640, 770], [418, 498])
+desk_bank_3 = combos([310], [652, 732, 812, 892, 972])
+desk_bank_4 = combos([300, 430, 470, 600, 640, 770], [1210, 1130])
+desk_bank_5 = combos([300, 430, 470, 600, 640, 770, 810], [1370, 1450])
+all_desks = reduce(vcat, [desk_bank_1, desk_bank_2, desk_bank_3, desk_bank_4, desk_bank_5])
+
 function init_model(bit_space;
     step = 0,
+    positions_to_use = all_desks,
     # agent properties
-    N = 10, # number of agents
+    N = size(positions_to_use)[1],
     I0 = 1, # initial number infected
     num_infected = 0,
 
     # disease proerties
-    # infection_period = 200,
-    # reinfection_probability = 0.05,
     interaction_radius = 0.02,
-    # death_rate = 0.02,
     β = 0.4,
 
     # space/time properties (spatial extent assumed as unit square)
@@ -51,9 +67,6 @@ function init_model(bit_space;
 )
     # dictionary of above properties to be applied globally to model
     properties = Dict(
-        # :infection_period => infection_period, 
-        # :reinfection_probability => reinfection_probability, 
-        # :death_rate => death_rate,
         :interaction_radius => interaction_radius,
         :Δt => Δt,
         :journey_weights => journey_weights,
@@ -64,23 +77,11 @@ function init_model(bit_space;
     model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
 
     # Add initial individuals
-    room_size = size(bit_space)
-    cols = room_size[1]
-    rows = room_size[2]
-    num_points = rows*cols
-    valid_spaces = (bit_space .== 1)
-    valid_spaces[bathroom_pos[1], bathroom_pos[2]] = false
-    valid_spaces[kitchen_pos[1], kitchen_pos[2]] = false
-    valid_spaces[exit_pos[1], exit_pos[2]] = false
-    valid_spaces = valid_spaces[1:num_points]
-    available_spaces = (1:num_points)[valid_spaces]
-    positions_to_use = sample(available_spaces, N; replace=false)
-    index2tuple(pos) = (rem(pos, cols), div(pos, cols)+1)
-    positions_to_use = index2tuple.(positions_to_use)
-    
+    infected_inds = sample(1:N, I0) # randomly choose who is infected
     for ind in 1:N
         pos = positions_to_use[ind]
-        status = ind ≤ N - I0 ? :S : :I
+        # status = ind ≤ N - I0 ? :S : :I
+        status = ind in infected_inds ? :I : :S
         agent = Person(ind, pos, 0, status, β, num_infected, :none, pos)
         add_agent_pos!(agent, model)
     end
@@ -137,7 +138,7 @@ end
 
 
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
-model, pathfinder = init_model(room; none_weight = 50, N = 20, I0 = 2, interaction_radius = 1)
+model, pathfinder = init_model(room; none_weight = 50, I0 = 2, interaction_radius = 1)
 
 GLMakie.activate!()
 fig, ax, abmobs = abmplot(model;
@@ -153,10 +154,11 @@ abmvideo(
     agent_step!,
     model_step!,
     figurekwargs = (resolution=(700,700),),
-    frames=200,
+    frames = 2000,
     framerate=30,
+    spf = 5,
     ac = colours,
-    as=11,
+    as = 15,
     heatarray = _ -> pathfinder.walkmap,
     add_colorbar = false,
 )
