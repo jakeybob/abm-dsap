@@ -22,9 +22,9 @@ end
 map_url = joinpath("pics", "meridian.bmp")
 room = rotr90(BitArray(map(x -> x.r > 0, load(map_url))), 1)
 
-bathroom_pos = (10, 2)
-kitchen_pos = (2, 2)
-exit_pos = (10, 9)
+bathroom_pos = (940, 890)
+kitchen_pos = (770, 730)
+exit_pos = (860, 200)
 
 function init_model(bit_space;
     step = 0,
