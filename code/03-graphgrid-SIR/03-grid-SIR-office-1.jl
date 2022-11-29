@@ -6,6 +6,7 @@ using Random, Agents, Agents.Pathfinding
 using InteractiveDynamics
 using GLMakie, CairoMakie
 using StatsBase
+using FileIO
 
 # DEFINE AGENT ####
 @agent Person GridAgent{2} begin
@@ -18,17 +19,8 @@ using StatsBase
 end
 
 # DEFINE SPACE ####
-room = permutedims(BitArray([  
-    0 0 0 0 0 0 0 0 0 0 0;
-    0 1 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 1 0;
-    0 0 0 0 1 1 0 0 0 0 0;
-    0 0 0 0 1 1 0 0 0 0 0;
-    0 1 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 1 0;
-    0 1 1 1 1 1 1 1 1 1 0;
-    0 0 0 0 0 0 0 0 0 0 0;]))
+map_url = joinpath("pics", "meridian.bmp")
+room = rotr90(BitArray(map(x -> x.r > 0, load(map_url))), 1)
 
 bathroom_pos = (10, 2)
 kitchen_pos = (2, 2)
@@ -147,13 +139,13 @@ end
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
 model, pathfinder = init_model(room; none_weight = 50, N = 20, I0 = 2, interaction_radius = 1)
 
-# GLMakie.activate!()
-# fig, ax, abmobs = abmplot(model;
-#     agent_step! = agent_step!, 
-#     model_step! = model_step!,
-#     ac = colours,
-#     heatarray = _ -> pathfinder.walkmap)
-# fig
+GLMakie.activate!()
+fig, ax, abmobs = abmplot(model;
+    agent_step! = agent_step!, 
+    model_step! = model_step!,
+    ac = colours,
+    heatarray = _ -> pathfinder.walkmap)
+fig
 
 abmvideo(
     joinpath("pics", "test.mp4"),
