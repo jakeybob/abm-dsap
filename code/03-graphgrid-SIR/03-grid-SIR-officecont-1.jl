@@ -56,6 +56,7 @@ end
 function init_model(walkmap;
     step = 0,
     positions_to_use = all_desks,
+
     # agent properties
     N = size(positions_to_use)[1],
     I0 = 1, # initial number infected
@@ -79,7 +80,8 @@ function init_model(walkmap;
         :interaction_radius => interaction_radius,
         :Δt => Δt,
         :journey_weights => journey_weights,
-        :step => step)
+        :step => step,
+        :walkmap => walkmap)
 
     # space = GridSpace(size(walkmap); periodic = false, metric = :euclidean)
     space = ContinuousSpace(size(walkmap); spacing = 1, periodic = false)
@@ -151,31 +153,50 @@ end
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
 model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1)
 
-GLMakie.activate!()
-fig, ax, abmobs = abmplot(model;
+function static_preplot!(ax, model)
+    heatmap!(ax, 1:size(model.walkmap)[1], 1:size(model.walkmap)[2], model.walkmap, colormap = :grays, margin = (0.0, 0.0))
+    hidedecorations!(ax) 
+end
+
+CairoMakie.activate!()
+run!(model, agent_step!, model_step!, 200)
+
+fig, _, _ = abmplot(model;
     agent_step! = agent_step!, 
     model_step! = model_step!,
-    ac = colours
-    # heatarray = _ -> pathfinder.walkmap
+    ac = colours,
+    as = 25,
+    figure = (; resolution = (1500, 1000)),
+    add_controls = false,
+    static_preplot!
     )
 fig
 
-CairoMakie.activate!()
-abmvideo(
-    joinpath("pics", "test3.mp4"),
-    model,
-    agent_step!,
-    model_step!,
-    figure = (; resolution = (1500, 1000)),
-    frames = 3,
-    framerate = 30,
-    spf = 5,
-    ac = colours,
-    as = 15,
-    showstep = false,
-    # heatarray = pathfinder.walkmap,
-    # heatarray = _ -> pathfinder.walkmap,
-    heatarray = nothing,
-    add_colorbar = false
-    )
+# GLMakie.activate!()
+# fig, ax, abmobs = abmplot(model;
+#     agent_step! = agent_step!, 
+#     model_step! = model_step!,
+#     ac = colours,
+#     static_preplot!
+#     # heatarray = _ -> pathfinder.walkmap
+#     )
+# fig
+
+# CairoMakie.activate!()
+# abmvideo(
+#     joinpath("pics", "test3.mp4"),
+#     model,
+#     agent_step!,
+#     model_step!,
+#     figure = (; resolution = (1500, 1000)),
+#     frames = 3,
+#     framerate = 30,
+#     spf = 5,
+#     ac = colours,
+#     as = 15,
+#     showstep = false,
+#     static_preplot!,
+#     )
+
+
 
