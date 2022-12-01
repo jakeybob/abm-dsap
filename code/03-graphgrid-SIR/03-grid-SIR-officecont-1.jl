@@ -18,7 +18,8 @@ using FileIO
     journey_type::Symbol # :none, :exit, :bathroom, :kitchen
     pos_initial::Tuple # initial position for agent to make return trips to
     pos_infected_at::Tuple # place where infected (initialise at (0.0, 0.0))
-    exit_signal_step::Int
+    exit_signal_step::Int # when to leave
+    exited::Bool # left the simulation (can't infect others) or not
 end
 
 
@@ -86,7 +87,8 @@ function init_model(walkmap;
         :step => step,
         :walkmap => walkmap,
         :exit_signals => exit_signals,
-        :exit_signal_step => exit_signal_step)
+        :exit_signal_step => exit_signal_step,
+        :seed => seed)
 
     space = ContinuousSpace(size(walkmap); spacing = 1, periodic = false)
     pathfinder = AStar(space; walkmap = walkmap)
@@ -98,10 +100,11 @@ function init_model(walkmap;
         pos = positions_to_use[ind]
         status = ind in infected_inds ? :I : :S
         vel = (0.0, 0.0)
-        add_agent!(pos, model, vel, 0, status, β, num_infected, :none, pos, (0.0, 0.0), exit_signals[ind])
+        add_agent!(pos, model, vel, 0, status, β, num_infected, :none, pos, (0.0, 0.0), exit_signals[ind], false)
     end
 
-    return model, pathfinder
+    # return model, pathfinder
+    return model
 end 
 
 function agent_step!(agent, model)
@@ -130,7 +133,7 @@ function agent_step!(agent, model)
     end
 
     # infect surrounding agents
-    if agent.status == :I
+    if (agent.status == :I) & (agent.exited == false)
         # for nearby agents, infect if they are not currently infected, 
         # but dependent on our infected agent's beta
         for nearby_agent in nearby_ids(agent, model, model.interaction_radius)
@@ -144,7 +147,7 @@ function agent_step!(agent, model)
 
     # if on a journey, then move. If arrived back home, then not on a journey
     if agent.journey_type != :none
-        speed = 1 + (rand()/2) - (1/4) # random spread in agent speeds
+        speed = 1 + (rand(model.rng)/2) - (1/4) # random spread in agent speeds
         move_along_route!(agent, model, pathfinder, speed, 1.0)
         if agent.pos == agent.pos_initial
             agent.journey_type = :none 
@@ -152,7 +155,8 @@ function agent_step!(agent, model)
     end
 
     if (agent.pos == exit_pos) & (model.step >= agent.exit_signal_step)
-        kill_agent!(agent, model)
+        # kill_agent!(agent, model)
+        agent.exited = true
     end
 
 end
@@ -162,6 +166,37 @@ function model_step!(model)
 end
 
 
+# ANALYSIS ####
+
+# SIR retreival functions
+# susceptible(x) = count(i == :S for i in x)
+# infected(x) = count(i == :I for i in x)
+# to_collect = [(:status, f) for f in (susceptible, infected)]
+
+# R0 and infection
+n_steps = 3000
+# model, _ = init_model(walkmap; seed = 1, none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 100, exit_signal_ramp = 1)
+n_models = 5
+models = [init_model(walkmap; seed = x) for x in 1:n_models]
+
+# r_data, _ = run!(model, agent_step!, model_step!, n_steps; adata = [:num_infected, :status])
+r_data, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :pos_infected_at])
+
+
+function infected_at_end(status, step)::Bool
+    (status == :I) && (step == n_steps)
+end
+
+z = filter([:status, :step] => infected_at_end, r_data)
+r0_1 = round(mean(z.num_infected), digits = 2)
+
+
+using StatsPlots
+histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
+
+
+
+# OTHER OUTPUTS ####
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
 model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 200, exit_signal_ramp = 5)
 
