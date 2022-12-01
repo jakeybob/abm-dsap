@@ -17,15 +17,13 @@ using FileIO
     num_infected::Int # number infected, for calculating effective R0
     journey_type::Symbol # :none, :exit, :bathroom, :kitchen
     pos_initial::Tuple # initial position for agent to make return trips to
+    pos_infected_at::Tuple # place where infected (initialise at (0, 0))
 end
 
 
 # DEFINE SPACE ####
 walkmap_url = joinpath("pics", "meridian.bmp")
 walkmap = rotr90(BitArray(map(x -> x.r > 0, load(walkmap_url))), 1)
-
-# penmap_url = joinpath("pics", "meridian-1way-4.jpg")
-# penmap = rotr90(255 .- floor.(Int, convert.(Float64, load(penmap_url)) * 255), 1)
 
 # define points of interest and agent's desk positions
 begin
@@ -72,6 +70,7 @@ function init_model(walkmap;
     kitchen_weight = 0.05,
     exit_weight = 0.01,
     none_weight = 1,
+    exit_signal_step = 300,
     journey_weights = Weights([bathroom_weight, kitchen_weight, exit_weight, none_weight])
 )
     # dictionary of above properties to be applied globally to model
@@ -80,11 +79,11 @@ function init_model(walkmap;
         :Δt => Δt,
         :journey_weights => journey_weights,
         :step => step,
-        :walkmap => walkmap)
+        :walkmap => walkmap,
+        :exit_signal_step => exit_signal_step)
 
     space = GridSpace(size(walkmap); periodic = false, metric = :euclidean)
     pathfinder = AStar(space; walkmap = walkmap, diagonal_movement = true)
-    # pathfinder = AStar(space; walkmap = walkmap, cost_metric = PenaltyMap(penmap, MaxDistance{2}()), diagonal_movement = true)
     model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
 
     # Add initial individuals
@@ -92,7 +91,7 @@ function init_model(walkmap;
     for ind in 1:N
         pos = positions_to_use[ind]
         status = ind in infected_inds ? :I : :S
-        agent = Person(ind, pos, 0, status, β, num_infected, :none, pos)
+        agent = Person(ind, pos, 0, status, β, num_infected, :none, pos, (0, 0))
         add_agent_pos!(agent, model)
     end
 
@@ -104,6 +103,9 @@ function agent_step!(agent, model)
     # if journey chosen, then plan route
     if agent.journey_type == :none
         agent.journey_type = sample([:bathroom, :kitchen, :exit, :none], model.properties[:journey_weights])
+        if model.step >= model.exit_signal_step
+            agent.journey_type = :exit
+        end
         if agent.journey_type == :bathroom
             plan_route!(agent, bathroom_pos, pathfinder)
         elseif agent.journey_type == :kitchen
@@ -127,6 +129,7 @@ function agent_step!(agent, model)
         for nearby_agent in nearby_ids(agent, model, model.interaction_radius)
             if (rand(model.rng) > agent.β) & (model[nearby_agent].status != :I)
                 model[nearby_agent].status = :I
+                model[nearby_agent].pos_infected_at = model[nearby_agent].pos 
                 agent.num_infected += 1
             end
         end
@@ -140,6 +143,10 @@ function agent_step!(agent, model)
         end
     end
 
+    if (agent.pos == exit_pos) & (model.step >= model.exit_signal_step)
+        kill_agent!(agent, model)
+    end
+
 end
 
 function model_step!(model)
@@ -147,9 +154,32 @@ function model_step!(model)
 end
 
 
+# OUTPUT ####
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
-model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1)
 
+# GENERAL ANIMATION: showing behaviours etc ####
+model, pathfinder = init_model(walkmap; none_weight = 150, I0 = 2, interaction_radius = 1, exit_signal_step = 2500)
+
+abmvideo(
+    joinpath("pics", "meridian_agent_anim.mp4"),
+    model,
+    agent_step!,
+    model_step!,
+    figure = (; resolution = (1500, 1000)),
+    # figure = (; resolution = (750, 500)),
+    axis = (; yticksvisible = false, xticksvisible = false, yticklabelsvisible = false, xticklabelsvisible = false, leftspinevisible = false),
+    frames = 1100,
+    framerate = 30,
+    spf = 5,
+    ac = colours,
+    as = 32,
+    heatarray = _ -> pathfinder.walkmap,
+    add_colorbar = false,
+    showstep = true
+    )
+
+
+    
 # GLMakie.activate!()
 # fig, ax, abmobs = abmplot(model;
 #     agent_step! = agent_step!, 
@@ -157,21 +187,3 @@ model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_ra
 #     ac = colours,
 #     heatarray = _ -> pathfinder.walkmap)
 # fig
-
-
-abmvideo(
-    joinpath("pics", "test3.mp4"),
-    model,
-    agent_step!,
-    model_step!,
-    figure = (; resolution = (1500, 1000)),
-    axis = (; yticksvisible = false, xticksvisible = false, yticklabelsvisible = false, xticklabelsvisible = false, leftspinevisible = false),
-    frames = 30,
-    framerate=30,
-    spf = 5,
-    ac = colours,
-    as = 25,
-    heatarray = _ -> pathfinder.walkmap,
-    add_colorbar = false,
-    showstep = false
-    )
