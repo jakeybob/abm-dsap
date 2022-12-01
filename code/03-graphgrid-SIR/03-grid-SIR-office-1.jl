@@ -168,14 +168,14 @@ abmvideo(
     figure = (; resolution = (1500, 1000)),
     # figure = (; resolution = (750, 500)),
     axis = (; yticksvisible = false, xticksvisible = false, yticklabelsvisible = false, xticklabelsvisible = false, leftspinevisible = false),
-    frames = 1100,
+    frames = 1200,
     framerate = 30,
     spf = 5,
     ac = colours,
     as = 32,
     heatarray = _ -> pathfinder.walkmap,
     add_colorbar = false,
-    showstep = true
+    showstep = false
     )
 
 
