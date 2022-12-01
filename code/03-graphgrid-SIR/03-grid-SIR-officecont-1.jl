@@ -6,7 +6,7 @@ using Random, Agents, Agents.Pathfinding
 using InteractiveDynamics
 using GLMakie, CairoMakie
 using StatsBase
-using FileIO
+using FileIO, CSV
 
 
 # DEFINE AGENT ####
@@ -17,7 +17,8 @@ using FileIO
     num_infected::Int # number infected, for calculating effective R0
     journey_type::Symbol # :none, :exit, :bathroom, :kitchen
     pos_initial::Tuple # initial position for agent to make return trips to
-    pos_infected_at::Tuple # place where infected (initialise at (0.0, 0.0))
+    x_pos_infected_at::Float64 # place where infected (initialise at (0.0, 0.0))
+    y_pos_infected_at::Float64 # place where infected (initialise at (0.0, 0.0))
     exit_signal_step::Int # when to leave
     exited::Bool # left the simulation (can't infect others) or not
 end
@@ -26,6 +27,8 @@ end
 # DEFINE SPACE ####
 walkmap_url = joinpath("pics", "meridian.bmp")
 walkmap = rotr90(BitArray(map(x -> x.r > 0, load(walkmap_url))), 1)
+space = ContinuousSpace(size(walkmap); spacing = 1, periodic = false)
+pathfinder = AStar(space; walkmap = walkmap)
 
 # define points of interest and agent's desk positions
 begin
@@ -90,8 +93,8 @@ function init_model(walkmap;
         :exit_signal_step => exit_signal_step,
         :seed => seed)
 
-    space = ContinuousSpace(size(walkmap); spacing = 1, periodic = false)
-    pathfinder = AStar(space; walkmap = walkmap)
+    # space = ContinuousSpace(size(walkmap); spacing = 1, periodic = false)
+    # pathfinder = AStar(space; walkmap = walkmap)
     model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
 
     # Add initial individuals
@@ -100,10 +103,9 @@ function init_model(walkmap;
         pos = positions_to_use[ind]
         status = ind in infected_inds ? :I : :S
         vel = (0.0, 0.0)
-        add_agent!(pos, model, vel, 0, status, β, num_infected, :none, pos, (0.0, 0.0), exit_signals[ind], false)
+        add_agent!(pos, model, vel, 0, status, β, num_infected, :none, pos, 0.0, 0.0, exit_signals[ind], false)
     end
 
-    # return model, pathfinder
     return model
 end 
 
@@ -139,7 +141,9 @@ function agent_step!(agent, model)
         for nearby_agent in nearby_ids(agent, model, model.interaction_radius)
             if (rand(model.rng) > agent.β) & (model[nearby_agent].status != :I)
                 model[nearby_agent].status = :I
-                model[nearby_agent].pos_infected_at = model[nearby_agent].pos
+                # model[nearby_agent].pos_infected_at = model[nearby_agent].pos
+                model[nearby_agent].x_pos_infected_at = model[nearby_agent].pos[1]
+                model[nearby_agent].y_pos_infected_at = model[nearby_agent].pos[2]
                 agent.num_infected += 1
             end
         end
@@ -175,58 +179,56 @@ end
 
 # R0 and infection
 n_steps = 3000
-# model, _ = init_model(walkmap; seed = 1, none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 100, exit_signal_ramp = 1)
-n_models = 5
+n_models = 10
 models = [init_model(walkmap; seed = x) for x in 1:n_models]
-
-# r_data, _ = run!(model, agent_step!, model_step!, n_steps; adata = [:num_infected, :status])
-r_data, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :pos_infected_at])
-
+z, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :x_pos_infected_at, :y_pos_infected_at])
 
 function infected_at_end(status, step)::Bool
     (status == :I) && (step == n_steps)
 end
 
-z = filter([:status, :step] => infected_at_end, r_data)
-r0_1 = round(mean(z.num_infected), digits = 2)
+z = filter([:status, :step] => infected_at_end, z)
 
+CSV.write(joinpath("outdata", "out1.csv"), z)
+r0_1 = round(mean(z.num_infected), digits = 3)
 
-using StatsPlots
-histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
-
+import StatsPlots, Plots
+StatsPlots.marginalkde(z.x_pos_infected_at, z.y_pos_infected_at)
+StatsPlots.histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
+Plots.scatter(z.x_pos_infected_at, z.y_pos_infected_at, ma=0.1, mc=:red, ms=5)
 
 
 # OTHER OUTPUTS ####
-colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
-model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 200, exit_signal_ramp = 5)
+# colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
+# model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 200, exit_signal_ramp = 5)
 
-run!(model, agent_step!, model_step!, 300)
-CairoMakie.activate!()
-function static_preplot!(ax, model)
-    heatmap!(ax, 1:size(model.walkmap)[1], 1:size(model.walkmap)[2], model.walkmap, colormap = :grays, margin = (0.0, 0.0))
-    hidedecorations!(ax) 
-end
+# run!(model, agent_step!, model_step!, 300)
+# CairoMakie.activate!()
+# function static_preplot!(ax, model)
+#     heatmap!(ax, 1:size(model.walkmap)[1], 1:size(model.walkmap)[2], model.walkmap, colormap = :grays, margin = (0.0, 0.0))
+#     hidedecorations!(ax) 
+# end
 
-fig, _, _ = abmplot(model;
-    agent_step! = agent_step!, 
-    model_step! = model_step!,
-    ac = colours,
-    as = 32,
-    figure = (; resolution = (1500, 1000)),
-    add_controls = false,
-    static_preplot!
-    )
-fig
+# fig, _, _ = abmplot(model;
+#     agent_step! = agent_step!, 
+#     model_step! = model_step!,
+#     ac = colours,
+#     as = 32,
+#     figure = (; resolution = (1500, 1000)),
+#     add_controls = false,
+#     static_preplot!
+#     )
+# fig
 
-GLMakie.activate!()
-fig, ax, abmobs = abmplot(model;
-    agent_step! = agent_step!, 
-    model_step! = model_step!,
-    ac = colours,
-    # static_preplot!
-    # heatarray = _ -> pathfinder.walkmap
-    )
-fig
+# GLMakie.activate!()
+# fig, ax, abmobs = abmplot(model;
+#     agent_step! = agent_step!, 
+#     model_step! = model_step!,
+#     ac = colours,
+#     # static_preplot!
+#     # heatarray = _ -> pathfinder.walkmap
+#     )
+# fig
 
 # CairoMakie.activate!()
 # abmvideo(
