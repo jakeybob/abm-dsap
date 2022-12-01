@@ -17,6 +17,8 @@ using FileIO
     num_infected::Int # number infected, for calculating effective R0
     journey_type::Symbol # :none, :exit, :bathroom, :kitchen
     pos_initial::Tuple # initial position for agent to make return trips to
+    pos_infected_at::Tuple # place where infected (initialise at (0.0, 0.0))
+    exit_signal_step::Int
 end
 
 
@@ -24,14 +26,11 @@ end
 walkmap_url = joinpath("pics", "meridian.bmp")
 walkmap = rotr90(BitArray(map(x -> x.r > 0, load(walkmap_url))), 1)
 
-# penmap_url = joinpath("pics", "meridian-1way-4.jpg")
-# penmap = rotr90(255 .- floor.(Int, convert.(Float64, load(penmap_url)) * 255), 1)
-
 # define points of interest and agent's desk positions
 begin
     bathroom_pos = (940.0, 890.0)
     kitchen_pos = (770.0, 730.0)
-    exit_pos = (860.0, 2000.0)
+    exit_pos = (860.0, 200.0)
 
     function combos(verts, horizs)
         points = size(verts)[1] * size(horizs)[1]
@@ -50,6 +49,7 @@ begin
     desk_bank_4 = combos([300.0, 430.0, 470.0, 600.0, 640.0, 770.0], [1210.0, 1130.0])
     desk_bank_5 = combos([300.0, 430.0, 470.0, 600.0, 640.0, 770.0, 810.0], [1370.0, 1450.0])
     all_desks = reduce(vcat, [desk_bank_1, desk_bank_2, desk_bank_3, desk_bank_4, desk_bank_5])
+    half_desks = all_desks[1:2:end]
 end
 
 
@@ -73,6 +73,9 @@ function init_model(walkmap;
     kitchen_weight = 0.05,
     exit_weight = 0.01,
     none_weight = 1,
+    exit_signal_step = 300,
+    exit_signal_ramp = 5,
+    exit_signals = exit_signal_step:exit_signal_ramp:(exit_signal_step + exit_signal_ramp*(N-1)),
     journey_weights = Weights([bathroom_weight, kitchen_weight, exit_weight, none_weight])
 )
     # dictionary of above properties to be applied globally to model
@@ -81,9 +84,10 @@ function init_model(walkmap;
         :Δt => Δt,
         :journey_weights => journey_weights,
         :step => step,
-        :walkmap => walkmap)
+        :walkmap => walkmap,
+        :exit_signals => exit_signals,
+        :exit_signal_step => exit_signal_step)
 
-    # space = GridSpace(size(walkmap); periodic = false, metric = :euclidean)
     space = ContinuousSpace(size(walkmap); spacing = 1, periodic = false)
     pathfinder = AStar(space; walkmap = walkmap)
     model = ABM(Person, space, properties = properties, rng = MersenneTwister(seed))
@@ -93,10 +97,8 @@ function init_model(walkmap;
     for ind in 1:N
         pos = positions_to_use[ind]
         status = ind in infected_inds ? :I : :S
-        # agent = Person(ind, pos, (0.0, 0.0), 0, status, β, num_infected, :none, pos)
-        # add_agent_pos!(agent, model)
         vel = (0.0, 0.0)
-        add_agent!(pos, model, vel, 0, status, β, num_infected, :none, pos)
+        add_agent!(pos, model, vel, 0, status, β, num_infected, :none, pos, (0.0, 0.0), exit_signals[ind])
     end
 
     return model, pathfinder
@@ -107,6 +109,10 @@ function agent_step!(agent, model)
     # if journey chosen, then plan route
     if agent.journey_type == :none
         agent.journey_type = sample([:bathroom, :kitchen, :exit, :none], model.properties[:journey_weights])
+        if model.step >= agent.exit_signal_step
+            agent.journey_type = :exit
+        end
+        # agent.journey_type = :exit
         if agent.journey_type == :bathroom
             plan_route!(agent, bathroom_pos, pathfinder)
         elseif agent.journey_type == :kitchen
@@ -115,6 +121,9 @@ function agent_step!(agent, model)
             plan_route!(agent, exit_pos, pathfinder)
         end
     end
+
+    # agent.journey_type = :exit
+    # plan_route!(agent, exit_pos, pathfinder)
 
     # if reached destination, then head back
     if (agent.journey_type == :bathroom && agent.pos == bathroom_pos) |
@@ -130,6 +139,7 @@ function agent_step!(agent, model)
         for nearby_agent in nearby_ids(agent, model, model.interaction_radius)
             if (rand(model.rng) > agent.β) & (model[nearby_agent].status != :I)
                 model[nearby_agent].status = :I
+                model[nearby_agent].pos_infected_at = model[nearby_agent].pos
                 agent.num_infected += 1
             end
         end
@@ -143,6 +153,10 @@ function agent_step!(agent, model)
         end
     end
 
+    if (agent.pos == exit_pos) & (model.step >= agent.exit_signal_step)
+        kill_agent!(agent, model)
+    end
+
 end
 
 function model_step!(model)
@@ -151,36 +165,35 @@ end
 
 
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
-model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1)
+model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 10)
 
+run!(model, agent_step!, model_step!, 300)
+CairoMakie.activate!()
 function static_preplot!(ax, model)
     heatmap!(ax, 1:size(model.walkmap)[1], 1:size(model.walkmap)[2], model.walkmap, colormap = :grays, margin = (0.0, 0.0))
     hidedecorations!(ax) 
 end
 
-CairoMakie.activate!()
-run!(model, agent_step!, model_step!, 200)
-
 fig, _, _ = abmplot(model;
     agent_step! = agent_step!, 
     model_step! = model_step!,
     ac = colours,
-    as = 25,
+    as = 32,
     figure = (; resolution = (1500, 1000)),
     add_controls = false,
     static_preplot!
     )
 fig
 
-# GLMakie.activate!()
-# fig, ax, abmobs = abmplot(model;
-#     agent_step! = agent_step!, 
-#     model_step! = model_step!,
-#     ac = colours,
-#     static_preplot!
-#     # heatarray = _ -> pathfinder.walkmap
-#     )
-# fig
+GLMakie.activate!()
+fig, ax, abmobs = abmplot(model;
+    agent_step! = agent_step!, 
+    model_step! = model_step!,
+    ac = colours,
+    # static_preplot!
+    # heatarray = _ -> pathfinder.walkmap
+    )
+fig
 
 # CairoMakie.activate!()
 # abmvideo(
@@ -197,6 +210,3 @@ fig
 #     showstep = false,
 #     static_preplot!,
 #     )
-
-
-
