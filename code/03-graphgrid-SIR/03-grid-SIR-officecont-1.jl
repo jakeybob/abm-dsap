@@ -122,9 +122,6 @@ function agent_step!(agent, model)
         end
     end
 
-    # agent.journey_type = :exit
-    # plan_route!(agent, exit_pos, pathfinder)
-
     # if reached destination, then head back
     if (agent.journey_type == :bathroom && agent.pos == bathroom_pos) |
         (agent.journey_type == :kitchen && agent.pos == kitchen_pos) |
@@ -147,7 +144,8 @@ function agent_step!(agent, model)
 
     # if on a journey, then move. If arrived back home, then not on a journey
     if agent.journey_type != :none
-        move_along_route!(agent, model, pathfinder, 1.0, 1.0)
+        speed = 1 + (rand()/2) - (1/4) # random spread in agent speeds
+        move_along_route!(agent, model, pathfinder, speed, 1.0)
         if agent.pos == agent.pos_initial
             agent.journey_type = :none 
         end
@@ -165,7 +163,7 @@ end
 
 
 colours(agent) = agent.status == :S ? "#0000ff" : agent.status == :I ? "#ff0000" : "#00ff00"
-model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 10)
+model, pathfinder = init_model(walkmap; none_weight = 50, I0 = 2, interaction_radius = 1, exit_signal_step = 200, exit_signal_ramp = 5)
 
 run!(model, agent_step!, model_step!, 300)
 CairoMakie.activate!()
