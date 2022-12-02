@@ -2,8 +2,7 @@ cd(@__DIR__)
 import Pkg
 Pkg.activate(".")
 
-using Random, Agents, Agents.Pathfinding
-using InteractiveDynamics
+using Random, Agents, Agents.Pathfinding, InteractiveDynamics
 using GLMakie, CairoMakie
 using StatsBase
 using FileIO, CSV
@@ -55,7 +54,7 @@ begin
     all_desks = reduce(vcat, [desk_bank_1, desk_bank_2, desk_bank_3, desk_bank_4, desk_bank_5])
     half_desks = all_desks[1:2:end]
 end
-
+# all_desks = half_desks
 
 function init_model(walkmap;
     step = 0,
@@ -117,7 +116,6 @@ function agent_step!(agent, model)
         if model.step >= agent.exit_signal_step
             agent.journey_type = :exit
         end
-        # agent.journey_type = :exit
         if agent.journey_type == :bathroom
             plan_route!(agent, bathroom_pos, pathfinder)
         elseif agent.journey_type == :kitchen
@@ -135,13 +133,12 @@ function agent_step!(agent, model)
     end
 
     # infect surrounding agents
-    if (agent.status == :I) & (agent.exited == false)
+    if (agent.status == :I) & (agent.exited == false) & (agent.x_pos_infected_at == 0.0) # only initially infected can infect
         # for nearby agents, infect if they are not currently infected, 
         # but dependent on our infected agent's beta
         for nearby_agent in nearby_ids(agent, model, model.interaction_radius)
             if (rand(model.rng) > agent.β) & (model[nearby_agent].status != :I)
                 model[nearby_agent].status = :I
-                # model[nearby_agent].pos_infected_at = model[nearby_agent].pos
                 model[nearby_agent].x_pos_infected_at = model[nearby_agent].pos[1]
                 model[nearby_agent].y_pos_infected_at = model[nearby_agent].pos[2]
                 agent.num_infected += 1
@@ -178,24 +175,129 @@ end
 # to_collect = [(:status, f) for f in (susceptible, infected)]
 
 # R0 and infection
-n_steps = 3000
-n_models = 10
-models = [init_model(walkmap; seed = x) for x in 1:n_models]
-z, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :x_pos_infected_at, :y_pos_infected_at])
-
 function infected_at_end(status, step)::Bool
     (status == :I) && (step == n_steps)
 end
 
+# CASE 1 ####
+n_steps = 3000
+n_models = 10
+
+begin
+    positions_to_use = all_desks
+    I0 = 5
+    interaction_radius = 0.02
+    β = 0.4
+    bathroom_weight = 0.02
+    kitchen_weight = 0.02
+    exit_weight = 0.02
+    none_weight = 1 - (bathroom_weight + kitchen_weight + exit_weight)
+    exit_signal_step = 2000
+    exit_signal_ramp = 1
+end
+
+models = [init_model(walkmap;   
+    seed = x,
+    positions_to_use = all_desks,
+    I0 = I0,
+    num_infected = 0,
+    interaction_radius = interaction_radius,
+    β = β,
+    bathroom_weight = bathroom_weight,
+    kitchen_weight = kitchen_weight,
+    exit_weight = exit_weight,
+    none_weight = none_weight,
+    exit_signal_step = exit_signal_step,
+    exit_signal_ramp = exit_signal_ramp
+    ) for x in 1:n_models]
+
+z, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :x_pos_infected_at, :y_pos_infected_at])
 z = filter([:status, :step] => infected_at_end, z)
-
 CSV.write(joinpath("outdata", "out1.csv"), z)
-r0_1 = round(mean(z.num_infected), digits = 3)
 
-import StatsPlots, Plots
-StatsPlots.marginalkde(z.x_pos_infected_at, z.y_pos_infected_at)
-StatsPlots.histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
-Plots.scatter(z.x_pos_infected_at, z.y_pos_infected_at, ma=0.1, mc=:red, ms=5)
+
+# CASE 2 ####
+n_steps = 3000
+n_models = 10
+
+begin
+    positions_to_use = all_desks
+    I0 = 5
+    interaction_radius = 0.02
+    β = 0.4
+    bathroom_weight = 0.01
+    kitchen_weight = 0.0
+    exit_weight = 0.02
+    none_weight = 1 - (bathroom_weight + kitchen_weight + exit_weight)
+    exit_signal_step = 2000
+    exit_signal_ramp = 1
+end
+
+models = [init_model(walkmap;   
+    seed = x,
+    positions_to_use = all_desks,
+    I0 = I0,
+    num_infected = 0,
+    interaction_radius = interaction_radius,
+    β = β,
+    bathroom_weight = bathroom_weight,
+    kitchen_weight = kitchen_weight,
+    exit_weight = exit_weight,
+    none_weight = none_weight,
+    exit_signal_step = exit_signal_step,
+    exit_signal_ramp = exit_signal_ramp
+    ) for x in 1:n_models]
+
+z, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :x_pos_infected_at, :y_pos_infected_at])
+z = filter([:status, :step] => infected_at_end, z)
+CSV.write(joinpath("outdata", "out2.csv"), z)
+
+
+# CASE 3 ####
+n_steps = 3000
+n_models = 10
+
+begin
+    positions_to_use = all_desks
+    I0 = 2
+    interaction_radius = 0.02
+    β = 0.4
+    bathroom_weight = 0.02
+    kitchen_weight = 0.02
+    exit_weight = 0.02
+    none_weight = 1 - (bathroom_weight + kitchen_weight + exit_weight)
+    exit_signal_step = 2000
+    exit_signal_ramp = 1
+end
+
+# model = init_model(walkmap; positions_to_use = half_desks)
+# a, _ = run!(model, agent_step!, model_step!, 1000, adata = [:num_infected, :status, :x_pos_infected_at, :y_pos_infected_at])
+
+models = [init_model(walkmap;   
+    seed = x,
+    positions_to_use = positions_to_use,
+    I0 = I0,
+    num_infected = 0,
+    interaction_radius = interaction_radius,
+    β = β,
+    bathroom_weight = bathroom_weight,
+    kitchen_weight = kitchen_weight,
+    exit_weight = exit_weight,
+    none_weight = none_weight,
+    exit_signal_step = exit_signal_step,
+    exit_signal_ramp = exit_signal_ramp
+    ) for x in 1:n_models]
+
+z, _, _ = ensemblerun!(models, agent_step!, model_step!, n_steps; adata = [:num_infected, :status, :x_pos_infected_at, :y_pos_infected_at])
+z = filter([:status, :step] => infected_at_end, z)
+CSV.write(joinpath("outdata", "out3.csv"), z)
+
+
+# r0_1 = round(mean(z.num_infected), digits = 3)
+# import StatsPlots, Plots
+# StatsPlots.marginalkde(z.x_pos_infected_at, z.y_pos_infected_at)
+# StatsPlots.histogram(z.num_infected, bins=0:maximum(z.num_infected), title = "R_0 = "*string(r0_1))
+# Plots.scatter(z.x_pos_infected_at, z.y_pos_infected_at, ma=0.1, mc=:red, ms=5)
 
 
 # OTHER OUTPUTS ####
