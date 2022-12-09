@@ -133,7 +133,7 @@ producing usable reproducible outputs and resources
 ::: {layout-ncol=2}
 
 * **Jupyter** notebook developed ⇒ code + context on disease modelling approaches
-
+<p>&nbsp;</p>
 * Available via [GitHub](https://github.com/jakeybob/abm-dsap) code repo and JupyterHub / mybinder
 
 <video data-autoplay src="pics/nbvid2.mp4" controls="" loop="true" autoplay="true"></video>
@@ -183,47 +183,80 @@ Here we have a basic model of the PHS Glasgow building; where we have people at 
 As you can see they bounce around happy and unaware, then leave at the end of the day.
 
 Although this is a very simple setup it allows us to model a lot of potentially complex things: 
+
 * make some people walk faster/slower
+
 * add in one person who's a superspreader
 
 Crucially, we can model the things we actually have control over in real life.
+
 * stagger the exit times
+
 * change the desk layout etc
-and we can get insights about things like when and where people are actually getting infected in the space,
+
+and we can get insights about things like **when** and **where** people are actually getting infected in the space,
 and use this to inform real-world decisions
 
 :::
 
 
-# Benefits / Goals Achieved...? {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# 
+::: {style="font-size: 0.9em"}
 
-::: {layout="[[20,80], [20,80], [20, 80], [20, 80]]"}
-**Julia**
+::: {layout="[[50,50], [50, 50]]"}
 
-* great agents library, fast, package/environments good
+![](pics/case-1.png)
 
-* not always well documented, occasionally hellish
+![](pics/case-2.png)
 
-**ABMs**
+**1. normal office conditions**<br>
+$\rm R_0 \sim 13$ (c.f. measles $\rm R_0 > 15$)<br><br>
+**2. implement Draconian tea measures?**<br>
+$\rm R_0 \sim 12$ (merely shifts the hot-spot)<br><br>
+**3. fewer people!**<br>
+$\rm R_0 \sim 5$
 
-* uniquely able to solve certain problems, flexible
+![](pics/case-3.png)
+:::
 
-* also occasionally hellish
+:::
 
-**General**
+::: {.notes}
+This is one example.​
+​
+This shows our office under the influence of a measles-like contagion. ​
+​
+The small red dots show where individual agents were infected, and the background colours are a heatmap of the same information.​
+​
+Under normal office conditions we can see that there's a lot of infection occurring at the top left corner, and that on average each person infects about 13 others.​
 
-* project/time management
+So, the conclusion you might draw is that the problem is people from the left half of the office going to the kitchen/bathroom.​
 
-* context/usefulness
+So, you ban people going to the kitchen and cut down on bathroom use.​
+But! This disease is so contagious that all this does is mean people get infected elsewhere in the office.​
 
-**Next Steps**
+However! Cutting down the occupancy to half (while allowing people to use the kitchen) does drastically reduce disease spread.​
+​
+This is something of a simple example, and when you try to model all possible human behaviours you can go a bit mad, but I think it paints an illustrative picture of how ABMs, and the work in this project, can provide insight to these real world problems.​
+:::
 
-* Julia / VSCode on PHS Azure/kubernetes 
+# Benefits / Goals Achieved..? {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
-* ???
+::: {layout="[[99, 1], [50, 35], [100]]"}
 
-* profit
+* ABM experience ⇒ usable informative tool produced​ 
 
+<a>&nbsp;</a>
+
+* shareable, reproducible code/analyses
+<p>&nbsp;</p>
+* evaluation of Julia language, libraries
+<p>&nbsp;</p>
+* integration of data science technologies 
+
+![](pics/api.jpg)
+
+(Julia, ABMs, git / GitHub / projects, quarto, binder / docker, VSCode)
 :::
 
 ::: {.notes}
@@ -274,14 +307,17 @@ Overall, there was a lot of integration of data science technologies to achieve 
 ::: {.notes}
 **Julia**
 Great, big fan, has lots of positives; but I would say there can be a bit of a steep learning curve.
+
 As it's a lesser used language it can be hard to find answer to questions, and sometimes answers are out of date
 
 **ABMs**
 Similarly, lots of positives, and they really are the only way to answer lots of specific human problems, and they are very underused.
+
 However, also sometimes annoying – e.g. the reason I used a very infectious disease for that office example was it meant I had to run the models far fewer times in order to accumulate data. Because agent behaviour is random.
 
 **General**
 Learned quite a bit about project/time management. Found weekly mentor meetings were a good mental reset as I have a tendency to get bogged down in details and bury into rabbit holes.
+
 And similarly for guidance and context – were in not for the limited time nature of the project I would probably have ended up spending two years doing some really abstract minutiae extremely thoroughly, but with no useful endpoint.
 
 **Next Steps**
