@@ -42,3 +42,4 @@ dsap_end_presentation_files/
 # Allows
 !docs/intro_presentation/*.mp4
 !docs/mid_point_presentation/pics/*.mp4
+!docs/end_presentation/pics/*.mp4
