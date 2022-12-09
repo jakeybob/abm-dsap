@@ -1,6 +1,6 @@
 ---
 title: "An Agent Based Infectious Disease Model"
-subtitle: "Data Science Accelerator Programme (end of project)"
+subtitle: "Data Science Accelerator Programme"
 title-slide-attributes:
     data-background-image: "presentation_files/phs_title_slide_background_1200x900.png"
     data-background-size: contain
@@ -8,7 +8,7 @@ title-slide-attributes:
 width: 1200
 height: 900
 author:
-  name: Bob Taylor
+  name: Bob Taylor  
 date: 12/07/2022
 date-format: long
 format: 
@@ -17,29 +17,7 @@ format:
     chalkboard: true
 ---
 
-## {background-color="#7030A0"}
-
-<p>&nbsp;</p>
-[Recap]{style="color: white; font-weight: bold; font-size: 80px"}
-<p>&nbsp;</p>
-[Progress]{style="color: white; font-weight: bold; font-size: 80px"}
-<p>&nbsp;</p>
-[Changes]{style="color: white; font-weight: bold; font-size: 80px"}
-<p>&nbsp;</p>
-[Next Steps...]{style="color: white; font-weight: bold; font-size: 80px"}
-
-::: {.notes}
-**Recap:** quick reminder on what my project proposal was, what agent based modelling is and why it's useful
-
-**Progress:** what have I been up to -- what has been done so far?
-
-**Changes:** what has changed in terms of goals etc since week 1, and why?
-
-**Next Steps:** what I expect to be getting on with next
-:::
-
-
-# Recap {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Introduction {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
 
@@ -57,165 +35,257 @@ format:
 </figure>
 
 ::: {.notes}
-TYPICALLY
+So, over the last couple of years you will likely have heard of something called **SEIR** models, or SEIR modelling techniques.
 
+These work by compartmentalising a population into different boxes:
 **S**usceptible
 **E**xposed
 **I**nfected
 **R**ecovered
 
-... give smooth continuous estimates of global outcomes estimated from system wide behaviours
+… and give nice smooth continuous estimates of global outcomes estimated from system wide behaviours
 
-TOP DOWN methodology where you set population level parameters
-
+This is a **TOP DOWN** way of thinking and modelling, and effectively assumes your population is homoegenous and completely mixed.
 :::
 
 
-## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Introduction {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
 
 **<u>Agent Based Models</u>**
 
-* individual agents given *behaviours* and *attributes*
-
+* individual agents given *behaviours* and *attributes* 
+<p>&nbsp;
 * allowed to *interact*, make decisions $\rightarrow$ evolve; e.g. become infected, admitted to hospital etc
 
 :::
 
-ABMs can effectively replicate SEIR models...
-
-::: {layout-ncol=3}
-![**10 agents**](pics/sir_10.png)
-
-![**100 agents**](pics/sir_100.png)
-
-![**1,000 agents**](pics/sir_1000.png)
-:::
-
 ::: {.notes}
-ABMs take a **BOTTOM UP** approach...
+**AGENT BASED MODELLING** take a **bottom-up** approach
 
-Individual agents; time stepped
-
-PLOTS show that ABMs replicate continuous models for *large* numbers of agents who all have the *same* properties
-
-
-Might say 5% of people have flu for continuous approach, or *these* 50 out of 1000 have flu
-
-$\Beta$ = probability of a contact causing an infection
-c = poisson expectation of number of expected contacts in each time step
-
-
+You define individuals with different properties, and allow them to interact, 
+make decisions, 
+bump into people, 
+go to hospital, 
+catch diseases, spread diseases.
 :::
 
 
-## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Introduction {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
 
-**<u>Project Proposal</u>**
+**<u>ABM advantages</u>**
 
-* produce Julia code to model variety of ABM disease transmission scenarios
-<p>&nbsp;</p>
-* interactive notebooks and/or web apps (allow users to create their own models)
-<p>&nbsp;</p>
-* stretch goal: web API service
+* models heterogenous spaces and populations
+<p>&nbsp;
+* include feedback loops, emergent behaviour
+<p>&nbsp;
+* clustering, individual effects
 
 :::
 
 ::: {.notes}
-* produce Julia code to model variety of ABM disease transmission scenarios
-* interactive notebooks and/or web apps (allow users to create their own models)
-* stretch goal: web API service
+**Heterogenous** – ie populations where every person is different and discrete, and every space they occupy is different
+
+**Feedback loops** – people more likely to be readmitted, emergent behaviour where people avoid spaces with other people
+
+**Clustering / small scale effects** – can have highly localised pocket of high transmission (superspreader)
+
+In **SUMMARY**
+ABMs are good at modelling situations where effects **OF** individuals matter, and where the effect **ON** individuals is the problem you're trying to solve 
+– this is applicable to disease spread, but also basically any socio-economic situation
+
+but ABMs are somewhat under-used in public health
 :::
 
 
-# Progress {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Project {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
-* investigated `Agents.jl` library
-* produced working 0D / 2D agent based disease models
+
+* **MVP : ** interactive Jupyter notebook ⇒ ABM simulations using [Julia](https://julialang.org/) / [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/)
+<p>&nbsp;</p>
+* **Stretch : ** model “realistic” spatial behaviour / spread scenarios only ABMs can do
+<p>&nbsp;</p>
+* **Overall Goals : ** develop useful modelling skills + tech expertise, with shareable outputs, knowledge and code
+
 
 :::
+
+::: {.notes}
+My project aims to be something of a proof of concept into exploring ABM modelling techniques technologies,
+producing usable reproducible outputs and resources
+
+**First goal**, minimum viable product, was to produce an interactive notebook showing the different modelling approaches; ie comparing disease modelling by solving continuous differential equations to essentially doing the same thing using agent based modelling
+
+**Stretch goal**, look at some things that only really ABMs can do, e.g. modelling more realistic spatial interactions between people and how this can affect disease spread
+
+**Overall goals**: developing useful modelling skills and expertise with Julia – a new programming language (to me), and producing some hopefully useful code and outputs
+:::
+
+
+# Interactive Notebook {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {style="font-size: 1.25em"}
 
 ::: {layout-ncol=2}
-![](pics/abm_test_false.mp4)
 
-![](pics/osm_test_glasgow.mp4)
+* **Jupyter** notebook developed ⇒ code + context on disease modelling approaches
+
+* Available via [GitHub](https://github.com/jakeybob/abm-dsap) code repo and JupyterHub / mybinder
+
+<video data-autoplay src="pics/nbvid2.mp4" controls="" loop="true" autoplay="true"></video>
+
+:::
 :::
 
 ::: {.notes}
-* investigated the capabilities of the Agents.jl library
-* produced working agent based disease models
+So, first off
+
+I produced this interactive notebook, that essentially presents as something of a blog post with embedded code.
+
+So, a user can sort of read through, hopefully kind of engage with some of the context and play with the models;
+and compare modelling approaches between the SEIR meddling with the ABM modelling.
+
+This can be downloaded from GitHub, but that entails some reasonably complicated set up – the user would have to set up a Julia environment, and would also have to *want* to do all that; so there's also a version that runs the notebook on this service called mybinder. This takes a GitHub repository, wraps it up in a docker container – which you can think of as essentially a mini self-contained computing environment, and deploys it on the web.
 :::
 
 
-## {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Office of Horrors {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
 ::: {style="font-size: 1.25em"}
-&nbsp;
+
+<!-- ::: {layout-ncol=2} -->
+::: {layout="[[35,65], [100]]"}
+
+* 2D floor plan of PHS Glasgow office
+<p>&nbsp;</p>
+* agents make journeys to/from 3 destinations
+
+<video data-autoplay src="pics/meridian_agent_anim.mp4" controls="" loop="true" autoplay="true"></video>
+
+[change model ↻ inform decisions]{style="color: black; font-weight: bold; font-size: 1.3em;"}
+
 :::
-
-::: {layout-ncol=2}
-![](pics/pic.png)
-
-* mistakes may have occurred
-<p>&nbsp;</p>
-* lessons learned
-<p>&nbsp;</p>
-* now compiling example notebooks for MVP
-<p>&nbsp;</p>
-* started looking at how to narrow scope for 2D models
-:::
-
-::: {.notes}
-* mistakes: accidentally messed up the agent collision physics so they continually accelerated past the speed of light
-* ended up being useful as to debug that I had to figure out how to extract information from the model while running
-* now compiling example notebooks for MVP
-* started looking at how to narrow scope for 2D models
-:::
-
-
-# Changes {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
-
-::: {style="font-size: 1.25em"}
- * **initial focus** $\Rightarrow$ interactive notebooks and apps 
-<p>&nbsp;</p>
-
- * **now** $\Rightarrow$ separate *visualisation* from *simulation*
-<p>&nbsp;</p>
-
- * allows wider availability / interoperability
-<p>&nbsp;</p>
-
- * (also more manageable in retrospect)
 :::
 
 ::: {.notes}
-initial focus: had more emphasis on notebook and interactive app outputs
+Moving on to the stretch goal, which I think was the more interesting part of the project for me.
 
-now: still have some notebooks, but shifting away from interactive web apps and hive off the simulation aspect -- so aim to have a web service that anyone can query from any environment (R, Python etc)
+Here I was really trying to get to a place where I could model some sort of quasi-realistic real-world situation, and try to develop some code that could provide useful insights that only really ABMs can provide.
+
+So, naturally, I decided to see how one might optimise office space for the situation of dealing with a horrendously contagious virus.
+
+Here we have a basic model of the PHS Glasgow building; where we have people at desks (red dots are infected people, blue dots are uninfected). These people then go about their day as normal, making wee trips to the bathroom (top), the kitchen (middle) and the exit door to the other floors (bottom).
+
+As you can see they bounce around happy and unaware, then leave at the end of the day.
+
+Although this is a very simple setup it allows us to model a lot of potentially complex things: 
+* make some people walk faster/slower
+* add in one person who's a superspreader
+
+Crucially, we can model the things we actually have control over in real life.
+* stagger the exit times
+* change the desk layout etc
+and we can get insights about things like when and where people are actually getting infected in the space,
+and use this to inform real-world decisions
+
 :::
 
 
-# Next Steps... {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+# Benefits / Goals Achieved...? {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
 
-::: {style="font-size: 1.25em"}
-* wrap up MVP (user interactive notebooks, deploy via e.g. [binder](https://mybinder.org/))
-<p>&nbsp;</p>
-* further develop 2D models (explore grid/graph types)
-<p>&nbsp;</p>
-* deploy as queryable service (AWS?)
-<p>&nbsp;</p>
-* write up docs etc!
+::: {layout="[[20,80], [20,80], [20, 80], [20, 80]]"}
+**Julia**
+
+* great agents library, fast, package/environments good
+
+* not always well documented, occasionally hellish
+
+**ABMs**
+
+* uniquely able to solve certain problems, flexible
+
+* also occasionally hellish
+
+**General**
+
+* project/time management
+
+* context/usefulness
+
+**Next Steps**
+
+* Julia / VSCode on PHS Azure/kubernetes 
+
+* ???
+
+* profit
+
 :::
 
 ::: {.notes}
-* wrap up MVP (user interactive notebooks, deploy via e.g. [binder](https://mybinder.org/))
-* further develop 2D models (explore grid/graph types)
-* deploy as queryable service (AWS?)
-* write up docs etc!
+So, what were the end benefits of this work, and were the goals achieved?
+
+ABM experience: yes, lots of experience gained working with ABMs and I produced
+
+Shareable notebook, a well lots of usable code and reproducible examples in the github repository
+
+Additionally, I developed a way to interact with these Julia ABMs from within R, or Python etc. So you don't necessarily have to learn or use Julia at all – you can decide what you want your model parameters to be – say, the number of agents in the model, and how infectious the disease is – then send that to a remote instance of the Julia project, which will then run the model and return the results. Here we have me doing this from RStudio on my laptop, with the model running on a remote Julia server – which just so happens to be the circuit board hanging from my Christmas tree
+
+Overall, there was a lot of integration of data science technologies to achieve all this – Julia, ABMs, git/github projects, quarto for presentations, binder/docker used to wrap up and deploy the notebook, VSCode as a development environment that synced across various devices
+
+:::
+
+
+# Lessons Learned... {background-image="presentation_files/phs_slide_background_1200x900.png" background-size="contain"}
+
+::: {layout="[[20,80], [20,80], [20, 80], [20, 80]]"}
+**Julia**
+
+* great agents library, fast, package/environments good
+
+* not always well documented, occasionally hellish
+
+**ABMs**
+
+* uniquely able to solve certain problems, flexible
+
+* also occasionally hellish
+
+**General**
+
+* project/time management
+
+* context/usefulness
+
+**Next Steps**
+
+* Julia / VSCode on PHS Azure/kubernetes 
+
+* ???
+
+* profit
+
+:::
+
+::: {.notes}
+**Julia**
+Great, big fan, has lots of positives; but I would say there can be a bit of a steep learning curve.
+As it's a lesser used language it can be hard to find answer to questions, and sometimes answers are out of date
+
+**ABMs**
+Similarly, lots of positives, and they really are the only way to answer lots of specific human problems, and they are very underused.
+However, also sometimes annoying – e.g. the reason I used a very infectious disease for that office example was it meant I had to run the models far fewer times in order to accumulate data. Because agent behaviour is random.
+
+**General**
+Learned quite a bit about project/time management. Found weekly mentor meetings were a good mental reset as I have a tendency to get bogged down in details and bury into rabbit holes.
+And similarly for guidance and context – were in not for the limited time nature of the project I would probably have ended up spending two years doing some really abstract minutiae extremely thoroughly, but with no useful endpoint.
+
+**Next Steps**
+PHS is rolling out a new cloud Azure setup for R, but it's also entirely possible to run other things like Python and Julia on there, so I think that'd be nice to see.
 :::
 
 
