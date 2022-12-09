@@ -1,7 +1,12 @@
 # Agent Based Modelling in Julia
 [![DOI](https://zenodo.org/badge/533281355.svg)](https://zenodo.org/badge/latestdoi/533281355)
 
+<!-- [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jakeybob/abm-dsap/HEAD?labpath=code%2F01-basic-SIR%2F01-basic-SIR.ipynb) -->
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jakeybob/binder-test/HEAD?labpath=01-basic-SIR.ipynb)
+
 An agent based model prototype, developed in [Julia](https://julialang.org/downloads/) (primarily using [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/)) as part of the Scottish Government [Data Science Accelerator Programme](https://www.gov.scot/publications/data-science-accelerator/)
+
 
 ## Julia Setup
 [https://julialang.org/downloads/](https://julialang.org/downloads/)

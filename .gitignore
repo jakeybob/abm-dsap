@@ -38,6 +38,7 @@ dsap_end_presentation_files/
 *.osm.cache
 **/maps/*.json
 *.bmp
+.Rproj.user
 
 # Allows
 !docs/intro_presentation/*.mp4
