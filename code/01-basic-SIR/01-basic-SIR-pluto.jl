@@ -1,8 +1,18 @@
 ### A Pluto.jl notebook ###
-# v0.19.14
+# v0.19.18
 
 using Markdown
 using InteractiveUtils
+
+# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
+macro bind(def, element)
+    quote
+        local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
+        local el = $(esc(element))
+        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
+        el
+    end
+end
 
 # ╔═╡ 4ad649e4-1435-47d4-8a01-25dc2fa64273
 begin
@@ -64,24 +74,38 @@ md"""
 * next, we can define our differential equation model, as well as the parameters ($\beta$ and $\gamma$) and starting values (here we define 1% of the population as infected at the start) we need.
 """
 
+# ╔═╡ e08996c7-050f-4126-b6b1-e4041aeef510
+
+
+# ╔═╡ 8c472bfc-3ae8-4c17-a55e-01e17edb33d9
+md"""
+* time to run the model!
+"""
+
+# ╔═╡ 4e3076cf-307a-4fc0-87c9-78a922a121c0
+md"""
+* finally, let's plot everything...
+"""
+
+# ╔═╡ f575e3c0-5037-4de9-acc2-5ee2bd4f2f54
+@bind beta html"<input type=range max=0.99 min=0.01 step=0.1>"
+
+# ╔═╡ 91d07b32-bf19-4d8d-861b-ebd9007636fb
+@bind init_I html"<input type=range max=0.5 min=0.01 step=0.05>"
+
 # ╔═╡ c6ccb90b-d61d-417d-8f55-3b5b35906242
-begin
+begin	
 	SIR_diffeq = @ode_def begin
 	    dS = -β*S*I
 	    dI = (β*S*I) - (γ*I)
 	    dR = γ*I
 	end β γ
 	
-	parameters = [0.4, 0.025] # β and γ parameters
-	init_I = 0.01 # 1% of population initially infected
+	parameters = [beta, 0.025] # β and γ parameters
+	# init_I = 0.01 # 1% of population initially infected
 	init_SIR = [1 - init_I, init_I, 0.0] # initial values for S, I, R (must sum to 1)
 	tspan = (0.0, 200.0) # start and stop time points
 end
-
-# ╔═╡ 8c472bfc-3ae8-4c17-a55e-01e17edb33d9
-md"""
-* time to run the model!
-"""
 
 # ╔═╡ 569e4c57-8734-4cc3-8d5f-a5d18e60115a
 begin
@@ -89,11 +113,6 @@ begin
 	SIR_diff_output = solve(SIR_diff_problem) # solve!
 	nothing # dummy line to suppress large output table displaying
 end
-
-# ╔═╡ 4e3076cf-307a-4fc0-87c9-78a922a121c0
-md"""
-* finally, let's plot everything...
-"""
 
 # ╔═╡ b14cf024-320f-48c1-bffa-a2e9b71e275e
 plot(SIR_diff_output, xlabel="time", ylabel="proportion", title = "SIR differential model", lw = 3)
@@ -122,7 +141,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "c5bf36a6ed3e3237cd448b1e2daef8bfd75f98c2"
+project_hash = "554c3173b27dba6889f45dda15a9a4e7c959ff31"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -2129,11 +2148,14 @@ version = "1.4.1+0"
 # ╟─e6d784a2-7d46-11ed-238e-db9cc1f9426b
 # ╟─d776042f-c807-425f-947e-b0d067ee099e
 # ╟─8645bd22-3f1b-467d-8faf-c00d216e8082
-# ╟─c6ccb90b-d61d-417d-8f55-3b5b35906242
+# ╠═e08996c7-050f-4126-b6b1-e4041aeef510
+# ╠═c6ccb90b-d61d-417d-8f55-3b5b35906242
 # ╟─8c472bfc-3ae8-4c17-a55e-01e17edb33d9
-# ╟─569e4c57-8734-4cc3-8d5f-a5d18e60115a
+# ╠═569e4c57-8734-4cc3-8d5f-a5d18e60115a
 # ╟─4e3076cf-307a-4fc0-87c9-78a922a121c0
 # ╟─b14cf024-320f-48c1-bffa-a2e9b71e275e
-# ╠═f8a799ae-4a5f-4f88-a8ab-6c58b86abcc7
+# ╠═f575e3c0-5037-4de9-acc2-5ee2bd4f2f54
+# ╠═91d07b32-bf19-4d8d-861b-ebd9007636fb
+# ╟─f8a799ae-4a5f-4f88-a8ab-6c58b86abcc7
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
