@@ -14,25 +14,20 @@ macro bind(def, element)
     end
 end
 
-# ╔═╡ 4ad649e4-1435-47d4-8a01-25dc2fa64273
+# ╔═╡ 8abf1b48-9d62-4614-92f2-5e8a62e2778a
 begin
 	cd(@__DIR__)
 	pic_url_1 = "pics/sir_nb_diag_01.png"
 	pic_url_2 = "pics/sir_nb_diag_02.png"
 	using PlutoUI
+	using DifferentialEquations, ParameterizedFunctions, StatsPlots
 end
 
-# ╔═╡ d776042f-c807-425f-947e-b0d067ee099e
-using DifferentialEquations, ParameterizedFunctions, StatsPlots
-
-# ╔═╡ 26c0c303-41c1-4f55-866a-b7da8c2a8cdc
-using Agents, DataFrames, Distributions, Random
+# ╔═╡ d59cb1c4-31c3-4f9e-aa50-9018ca03656e
+md"""# Modelling Disease Transmission"""
 
 # ╔═╡ e6d784a2-7d46-11ed-238e-db9cc1f9426b
-md"""
-# Modelling Disease Transmission
-
-## Introduction
+md"""## Introduction
 The COVID19 [pandemic](https://en.wikipedia.org/wiki/COVID-19_pandemic) has thrown into stark relief the need for reliable data, testing, and disease modelling, and shown how our individual actions can affect public health.
 
 Computational modelling has been a powerful tool for informing policy, and ultimately steering individual behaviour decisions at large nationwide scales.
@@ -44,11 +39,13 @@ Arguably the most common method is to compartmentalize the population into a few
 Another way to look at it is to think from the *bottom up* ... instead of modelling whole interacting populations, we can instead define individual *agents*, each of which can then interact, and e.g. transmit a disease, recover and so on.
 
 Let's take a look at both ...
+"""
 
+# ╔═╡ e84efd26-1183-4f00-866a-b21aca67a159
+md"""
 ## Model 1: top-down, differential equations
 We can think of this [model](https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model_2) as being something like a chemistry set -- where we start with a population of susceptible people (S), mix in a small amount of infectedness (I), then wait a while to see what proportion get infected, and then what proportion will recover.
 """
-
 
 # ╔═╡ 51d9ca88-2aac-4b19-9eb3-a7f47318f5e5
 md"""
@@ -72,33 +69,16 @@ $\dot I(t) = \dot S(t) + \dot R(t)$
 
 *The rate of change of the infected proportion of the population at time *t* is: the sum of the rates of change of the susceptible and recovered population (times -1)*
 
-While it's easy enough to write these equations down, solving them can be non-trivial.
-
-### Julia code
-
-* let's start by firing up a Julia environment and load the packages needed to solve our differential equations and plot the results.
+An interactive SIR model built this way, with some adjustable parameters, can be seen below.
 """
 
-# ╔═╡ 8645bd22-3f1b-467d-8faf-c00d216e8082
-md"""
-* next, we can define our differential equation model, as well as the parameters ($\beta$ and $\gamma$) and starting values (here we define 1% of the population as infected at the start) we need.
-"""
-
-# ╔═╡ 8c472bfc-3ae8-4c17-a55e-01e17edb33d9
-md"""
-* time to run the model!
-"""
-
-# ╔═╡ 4e3076cf-307a-4fc0-87c9-78a922a121c0
-md"""
-* finally, let's plot everything...
-"""
+# ╔═╡ eca211b1-dd4d-4d5c-a32c-4d9e343c3df6
+md"""**SIR Diferential Model**"""
 
 # ╔═╡ 0d295b1f-4553-42ec-8448-7af3326223b5
 md"""
-β $(@bind beta html"<input type=range max=0.99 min=0.01 step=0.1>")
-
-I0 $(@bind init_I html"<input type=range max=0.5 min=0.01 step=0.05>")
+**β** $(@bind beta Slider(0.01:0.1:0.99, default=0.4)) **γ** $(@bind gamma Slider(0.01:0.005:0.5, default=0.025)) 
+**I\_init** $(@bind init_I Slider(0.01:0.05:0.5, default=0.01))
 """
 
 # ╔═╡ c6ccb90b-d61d-417d-8f55-3b5b35906242
@@ -109,25 +89,20 @@ begin
 	    dR = γ*I
 	end β γ
 	
-	parameters = [beta, 0.025] # β and γ parameters
+	parameters = [beta, gamma] # β and γ parameters
 	# init_I = 0.01 # 1% of population initially infected
 	init_SIR = [1 - init_I, init_I, 0.0] # initial values for S, I, R (must sum to 1)
 	tspan = (0.0, 200.0) # start and stop time points
-	nothing
-end
-
-# ╔═╡ 569e4c57-8734-4cc3-8d5f-a5d18e60115a
-begin
 	SIR_diff_problem = ODEProblem(SIR_diffeq, init_SIR, tspan, parameters) # define the problem
 	SIR_diff_output = solve(SIR_diff_problem) # solve!
 	nothing # dummy line to suppress large output table displaying
 end
 
 # ╔═╡ b14cf024-320f-48c1-bffa-a2e9b71e275e
-plot(SIR_diff_output, xlabel="time", ylabel="proportion", title = "SIR differential model", lw = 3)
+plot(SIR_diff_output, xlabel="time", ylabel="proportion", title = "β = " * string(beta) * ", γ = " * string(gamma) * ", I_init = " * string(init_I), lw = 3)
 
-# ╔═╡ f2a456b4-c4d3-4c51-88c8-8d8aa72d54a2
-beta
+# ╔═╡ db329ccf-3d5f-4ff9-be2b-2b2042e6cf8b
+
 
 # ╔═╡ bea9af50-ecb8-4e48-a60b-82bca3223aad
 md"""
@@ -143,19 +118,111 @@ $(LocalResource(pic_url_2))
 
 # ╔═╡ 292875f9-7299-4258-bd64-e7d949647f75
 md"""
-### Julia code
-We can make use of the [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/) library, and set up an agent based model similar to the SIR differential equation model we already have.
+Instead of solving smooth differential equations, we can make use of the [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/) library, and set up an agent based model.
+
+This simulates a population of $N$ individuals: for each step of the simulation they have a chance of interacting with other agents, and for each interaction there is a chance an infected agent will pass on their infection.
+
+An interactive SIR model built this way, with some adjustable parameters, can be seen below.
 """
 
-# ╔═╡ ac7badde-6c14-45d6-8144-0dcbbeca450a
+# ╔═╡ bb1cab5b-0b40-4085-af53-e3925b1d0eda
+md"""**SIR Agent Based Model**"""
+
+# ╔═╡ 1b1e7780-b387-4fdd-9016-c6bb03c8da39
 md"""
-* first we define our *agents* -- they have two simple properties: *id* (a number so the model can identify each agent) and *status* (which will take the values *S*, *I* or *R* depending on the agent's disease status)
+**β** $(@bind beta_abm Slider(0.01:0.1:0.99, default=0.4)) **γ** $(@bind gamma_abm Slider(0.01:0.005:0.5, default=0.025)) **I\_init** $(@bind init_I_abm Slider(1:1:500, default=0.01))
 """
 
-# ╔═╡ dfb072e5-051c-4739-b9cd-3a24fb7330c0
-mutable struct Person <: AbstractAgent
-    id::Int64
-    status::Symbol
+# ╔═╡ 78424c00-b6a7-4bd4-9355-52829c7ed86d
+md"""
+**N** $(@bind N Slider(1:1:1000, default=100)) 
+"""
+
+# ╔═╡ bfe8ecb8-bf4c-45da-8664-1859dafa9af6
+begin
+	using Agents, DataFrames, Distributions, Random
+	mutable struct Person <: AbstractAgent
+	    id::Int64
+	    status::Symbol
+	end
+
+	function init_model(β::Float64, c::Float64, γ::Float64, N::Int64, I0::Int64)
+    properties = Dict(:β=>β, :c=>c, :γ=>γ)
+    model = ABM(Person; properties=properties)
+    # set I0 agents to be infected, and the rest (up to N) as susceptible
+    for i in 1:N
+        if i <= I0
+            s = :I # these are symbols, as defined in the Person struct
+        else
+            s = :S
+        end
+        # instatiate a "Person" agent with appropriate id and status, and add to model
+        p = Person(i, s)
+        p = add_agent!(p, model)
+    end
+    return model
+	end
+
+	function transmit!(agent, model, N)
+    agent.status != :S && return # short-circuit "and" evaluation here means that if status is not :S, function returns here, ie this agent cannot be infected 
+    ncontacts = rand(Poisson(model.properties[:c])) # how many contacts has our agent made in time δt?
+    all_agent_ids = 1:N
+    agent_ids = all_agent_ids[all_agent_ids .!= agent.id] # agent ids excluding our agent itself
+
+    for i in 1:ncontacts
+        alter = model[rand(agent_ids)]
+        if alter.status == :I && (rand() ≤ model.properties[:β])
+            # An infection occurs
+            agent.status = :I
+            break
+        end
+    end
+	end
+
+	function recover!(agent, model)
+    agent.status != :I && return
+    if rand() ≤ model.properties[:γ]
+            agent.status = :R
+    end
+	end
+
+	function agent_step!(agent, model)
+    transmit!(agent, model, N)
+    recover!(agent, model)
+	end
+
+	susceptible(x) = count(i == :S for i in x)
+	infected(x) = count(i == :I for i in x)
+	recovered(x) = count(i == :R for i in x)
+
+	Random.seed!(1234)
+	Δt = 0.1 # time step width
+	nsteps = 400 
+	tf = nsteps * Δt # time at end of simulation
+	t = 0:Δt:tf # vector of time points
+	
+	# γ = 0.025 # prob of recovery for each time step (if infected)
+	# β = 0.4 # prob of a contact causing infection
+	c = 0.3 # poissonian expectation value of number of contacts in time step
+	
+	# N = 1000 # total agents
+	# init_I_abm = 10 # initial infected
+
+	to_collect = [(:status, f) for f in (susceptible, infected, recovered)] # data to collect (counts of S, I, R)
+	
+	abm_model = init_model(beta_abm, c, gamma_abm, N, init_I_abm) # initiate model
+	abm_data, _ = run!(abm_model, agent_step!, nsteps; adata = to_collect) # run model and collect data; returned as abm_data
+	abm_data[!, :t] = t # insert the time vector
+	nothing
+end
+
+# ╔═╡ 7c862b8d-8c1b-4ed0-b353-e241149a645b
+begin
+	title = "β = " * string(beta_abm) * ", γ = " * string(gamma_abm) * ", I_init = " * string(init_I_abm) * ", N = " *string(N)
+	p = plot(t, abm_data[:, 2], label="S", xlab="time", ylabel="number", title = title, lw=3)
+	p = plot!(t,abm_data[:, 3], label="I", lw = 3)
+	p = plot!(t,abm_data[:, 4], label="R", lw = 3)
+	
 end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
@@ -186,7 +253,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "8148d5e12162289a78b048d4654e934641a02c77"
+project_hash = "162137a2b4e33bed9e35fdf62a949233d7768492"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -1223,9 +1290,9 @@ version = "1.0.0"
 
 [[deps.LoopVectorization]]
 deps = ["ArrayInterface", "ArrayInterfaceCore", "ArrayInterfaceOffsetArrays", "ArrayInterfaceStaticArrays", "CPUSummary", "ChainRulesCore", "CloseOpenIntervals", "DocStringExtensions", "ForwardDiff", "HostCPUFeatures", "IfElse", "LayoutPointers", "LinearAlgebra", "OffsetArrays", "PolyesterWeave", "SIMDDualNumbers", "SIMDTypes", "SLEEFPirates", "SnoopPrecompile", "SpecialFunctions", "Static", "ThreadingUtilities", "UnPack", "VectorizationBase"]
-git-tree-sha1 = "da5317a78e2a9f692730345cf3ff820109f406d3"
+git-tree-sha1 = "f63e9022be00102b6d135b3363680e5befa8e227"
 uuid = "bdcacae8-1622-11e9-2a5c-532679323890"
-version = "0.12.141"
+version = "0.12.142"
 
 [[deps.MIMEs]]
 git-tree-sha1 = "65f28ad4b594aebe22157d6fac869786a255b7eb"
@@ -1484,9 +1551,9 @@ version = "1.3.2"
 
 [[deps.Plots]]
 deps = ["Base64", "Contour", "Dates", "Downloads", "FFMPEG", "FixedPointNumbers", "GR", "JLFzf", "JSON", "LaTeXStrings", "Latexify", "LinearAlgebra", "Measures", "NaNMath", "Pkg", "PlotThemes", "PlotUtils", "Preferences", "Printf", "REPL", "Random", "RecipesBase", "RecipesPipeline", "Reexport", "RelocatableFolders", "Requires", "Scratch", "Showoff", "SnoopPrecompile", "SparseArrays", "Statistics", "StatsBase", "UUIDs", "UnicodeFun", "Unzip"]
-git-tree-sha1 = "dadd6e31706ec493192a70a7090d369771a9a22a"
+git-tree-sha1 = "513084afca53c9af3491c94224997768b9af37e8"
 uuid = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
-version = "1.37.2"
+version = "1.38.0"
 
 [[deps.PlutoUI]]
 deps = ["AbstractPlutoDingetjes", "Base64", "ColorTypes", "Dates", "FixedPointNumbers", "Hyperscript", "HypertextLiteral", "IOCapture", "InteractiveUtils", "JSON", "Logging", "MIMEs", "Markdown", "Random", "Reexport", "URIs", "UUIDs"]
@@ -2316,24 +2383,24 @@ version = "1.4.1+0"
 """
 
 # ╔═╡ Cell order:
-# ╟─4ad649e4-1435-47d4-8a01-25dc2fa64273
+# ╟─d59cb1c4-31c3-4f9e-aa50-9018ca03656e
+# ╟─8abf1b48-9d62-4614-92f2-5e8a62e2778a
 # ╟─e6d784a2-7d46-11ed-238e-db9cc1f9426b
+# ╟─e84efd26-1183-4f00-866a-b21aca67a159
 # ╟─51d9ca88-2aac-4b19-9eb3-a7f47318f5e5
 # ╟─767fa1f0-baa7-4819-97b1-1eac93b7d9f7
-# ╟─d776042f-c807-425f-947e-b0d067ee099e
-# ╟─8645bd22-3f1b-467d-8faf-c00d216e8082
 # ╟─c6ccb90b-d61d-417d-8f55-3b5b35906242
-# ╟─8c472bfc-3ae8-4c17-a55e-01e17edb33d9
-# ╟─569e4c57-8734-4cc3-8d5f-a5d18e60115a
-# ╟─4e3076cf-307a-4fc0-87c9-78a922a121c0
+# ╟─eca211b1-dd4d-4d5c-a32c-4d9e343c3df6
 # ╟─b14cf024-320f-48c1-bffa-a2e9b71e275e
-# ╠═0d295b1f-4553-42ec-8448-7af3326223b5
-# ╠═f2a456b4-c4d3-4c51-88c8-8d8aa72d54a2
+# ╟─0d295b1f-4553-42ec-8448-7af3326223b5
+# ╟─db329ccf-3d5f-4ff9-be2b-2b2042e6cf8b
 # ╟─bea9af50-ecb8-4e48-a60b-82bca3223aad
-# ╠═9e1db53e-973f-4968-85eb-3d9d0d5609fc
+# ╟─9e1db53e-973f-4968-85eb-3d9d0d5609fc
 # ╟─292875f9-7299-4258-bd64-e7d949647f75
-# ╠═26c0c303-41c1-4f55-866a-b7da8c2a8cdc
-# ╠═ac7badde-6c14-45d6-8144-0dcbbeca450a
-# ╠═dfb072e5-051c-4739-b9cd-3a24fb7330c0
+# ╟─bfe8ecb8-bf4c-45da-8664-1859dafa9af6
+# ╟─bb1cab5b-0b40-4085-af53-e3925b1d0eda
+# ╟─7c862b8d-8c1b-4ed0-b353-e241149a645b
+# ╟─1b1e7780-b387-4fdd-9016-c6bb03c8da39
+# ╟─78424c00-b6a7-4bd4-9355-52829c7ed86d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
