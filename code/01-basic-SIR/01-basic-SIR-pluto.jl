@@ -25,6 +25,9 @@ end
 # ╔═╡ d776042f-c807-425f-947e-b0d067ee099e
 using DifferentialEquations, ParameterizedFunctions, StatsPlots
 
+# ╔═╡ 26c0c303-41c1-4f55-866a-b7da8c2a8cdc
+using Agents, DataFrames, Distributions, Random
+
 # ╔═╡ e6d784a2-7d46-11ed-238e-db9cc1f9426b
 md"""
 # Modelling Disease Transmission
@@ -44,10 +47,17 @@ Let's take a look at both ...
 
 ## Model 1: top-down, differential equations
 We can think of this [model](https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model_2) as being something like a chemistry set -- where we start with a population of susceptible people (S), mix in a small amount of infectedness (I), then wait a while to see what proportion get infected, and then what proportion will recover.
+"""
 
-![](pics/sir_nb_diag_01.png)
-*The SIR model can be thought of as a chmical mixing interaction*
 
+# ╔═╡ 51d9ca88-2aac-4b19-9eb3-a7f47318f5e5
+md"""
+$(LocalResource(pic_url_1))
+*The SIR model can be thought of as a chemical mixing interaction*
+"""
+
+# ╔═╡ 767fa1f0-baa7-4819-97b1-1eac93b7d9f7
+md"""
 This can all be described by a few differential equations...
 
 $\dot S(t) = - \beta S(t)I(t)$
@@ -74,9 +84,6 @@ md"""
 * next, we can define our differential equation model, as well as the parameters ($\beta$ and $\gamma$) and starting values (here we define 1% of the population as infected at the start) we need.
 """
 
-# ╔═╡ e08996c7-050f-4126-b6b1-e4041aeef510
-
-
 # ╔═╡ 8c472bfc-3ae8-4c17-a55e-01e17edb33d9
 md"""
 * time to run the model!
@@ -87,11 +94,12 @@ md"""
 * finally, let's plot everything...
 """
 
-# ╔═╡ f575e3c0-5037-4de9-acc2-5ee2bd4f2f54
-@bind beta html"<input type=range max=0.99 min=0.01 step=0.1>"
+# ╔═╡ 0d295b1f-4553-42ec-8448-7af3326223b5
+md"""
+β $(@bind beta html"<input type=range max=0.99 min=0.01 step=0.1>")
 
-# ╔═╡ 91d07b32-bf19-4d8d-861b-ebd9007636fb
-@bind init_I html"<input type=range max=0.5 min=0.01 step=0.05>"
+I0 $(@bind init_I html"<input type=range max=0.5 min=0.01 step=0.05>")
+"""
 
 # ╔═╡ c6ccb90b-d61d-417d-8f55-3b5b35906242
 begin	
@@ -105,6 +113,7 @@ begin
 	# init_I = 0.01 # 1% of population initially infected
 	init_SIR = [1 - init_I, init_I, 0.0] # initial values for S, I, R (must sum to 1)
 	tspan = (0.0, 200.0) # start and stop time points
+	nothing
 end
 
 # ╔═╡ 569e4c57-8734-4cc3-8d5f-a5d18e60115a
@@ -117,19 +126,55 @@ end
 # ╔═╡ b14cf024-320f-48c1-bffa-a2e9b71e275e
 plot(SIR_diff_output, xlabel="time", ylabel="proportion", title = "SIR differential model", lw = 3)
 
-# ╔═╡ f8a799ae-4a5f-4f88-a8ab-6c58b86abcc7
-md"""$(LocalResource(pic_url_1))"""
+# ╔═╡ f2a456b4-c4d3-4c51-88c8-8d8aa72d54a2
+beta
+
+# ╔═╡ bea9af50-ecb8-4e48-a60b-82bca3223aad
+md"""
+## Model 2: bottom-up, agent-based
+Instead of thinking of our population as a perfectly mixed "fluid", we can think of it in a more person-centric way -- as a collection of interacting [agents](https://en.wikipedia.org/wiki/Agent-based_model).
+"""
+
+# ╔═╡ 9e1db53e-973f-4968-85eb-3d9d0d5609fc
+md"""
+$(LocalResource(pic_url_2))
+*Agent based models consist of interacting agents, each with their own individual properties*
+"""
+
+# ╔═╡ 292875f9-7299-4258-bd64-e7d949647f75
+md"""
+### Julia code
+We can make use of the [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/) library, and set up an agent based model similar to the SIR differential equation model we already have.
+"""
+
+# ╔═╡ ac7badde-6c14-45d6-8144-0dcbbeca450a
+md"""
+* first we define our *agents* -- they have two simple properties: *id* (a number so the model can identify each agent) and *status* (which will take the values *S*, *I* or *R* depending on the agent's disease status)
+"""
+
+# ╔═╡ dfb072e5-051c-4739-b9cd-3a24fb7330c0
+mutable struct Person <: AbstractAgent
+    id::Int64
+    status::Symbol
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
+Agents = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 ParameterizedFunctions = "65888b18-ceab-5e60-b2b9-181511a3b968"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsPlots = "f3b207a7-027a-5e70-b257-86293d7955fd"
 
 [compat]
+Agents = "~5.6.2"
+DataFrames = "~1.4.4"
 DifferentialEquations = "~7.6.0"
+Distributions = "~0.25.79"
 ParameterizedFunctions = "~5.15.0"
 PlutoUI = "~0.7.49"
 StatsPlots = "~0.15.4"
@@ -141,7 +186,7 @@ PLUTO_MANIFEST_TOML_CONTENTS = """
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "554c3173b27dba6889f45dda15a9a4e7c959ff31"
+project_hash = "8148d5e12162289a78b048d4654e934641a02c77"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -171,6 +216,12 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "195c5505521008abea5aee4f96930717958eac6f"
 uuid = "79e6a3ab-5dfb-504d-930d-738a2a938a0e"
 version = "3.4.0"
+
+[[deps.Agents]]
+deps = ["CSV", "DataFrames", "DataStructures", "Distributed", "Downloads", "Graphs", "JLD2", "LazyArtifacts", "LightOSM", "LinearAlgebra", "Pkg", "ProgressMeter", "Random", "Requires", "Scratch", "StatsBase"]
+git-tree-sha1 = "627238422f2fbda490a42e2984a834f6914d85cf"
+uuid = "46ada45e-f475-11e8-01d0-f70cc89e6671"
+version = "5.6.2"
 
 [[deps.ArgCheck]]
 git-tree-sha1 = "a3a402a35a2f7e0b87828ccabbd5ebfbebe356b4"
@@ -240,6 +291,11 @@ deps = ["FillArrays", "LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "1cbe50e27f4df02b8eba54f10a76888b606c47b2"
 uuid = "4c555306-a7a7-4459-81d9-ec55ddd5c99a"
 version = "0.8.16"
+
+[[deps.ArrayTools]]
+git-tree-sha1 = "c7218fcb9e570633115447768f5f728fc07d2029"
+uuid = "1dc0ca97-c5ce-4e77-ac6d-c576ac9d7f27"
+version = "0.2.5"
 
 [[deps.Artifacts]]
 uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
@@ -319,6 +375,12 @@ deps = ["Tokenize"]
 git-tree-sha1 = "3ddd48d200eb8ddf9cb3e0189fc059fd49b97c1f"
 uuid = "00ebfdb7-1f24-5e51-bd34-a7502290713f"
 version = "3.3.6"
+
+[[deps.CSV]]
+deps = ["CodecZlib", "Dates", "FilePathsBase", "InlineStrings", "Mmap", "Parsers", "PooledArrays", "SentinelArrays", "SnoopPrecompile", "Tables", "Unicode", "WeakRefStrings", "WorkerUtilities"]
+git-tree-sha1 = "8c73e96bd6817c2597cfd5615b91fca5deccf1af"
+uuid = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+version = "0.10.8"
 
 [[deps.Cairo_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
@@ -455,6 +517,12 @@ version = "4.1.1"
 git-tree-sha1 = "e8119c1a33d267e16108be441a287a6981ba1630"
 uuid = "9a962f9c-6df0-11e9-0e5d-c546b8b5ee8a"
 version = "1.14.0"
+
+[[deps.DataFrames]]
+deps = ["Compat", "DataAPI", "Future", "InvertedIndices", "IteratorInterfaceExtensions", "LinearAlgebra", "Markdown", "Missings", "PooledArrays", "PrettyTables", "Printf", "REPL", "Random", "Reexport", "SnoopPrecompile", "SortingAlgorithms", "Statistics", "TableTraits", "Tables", "Unicode"]
+git-tree-sha1 = "d4f69885afa5e6149d0cab3818491565cf41446d"
+uuid = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+version = "1.4.4"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
@@ -641,6 +709,18 @@ deps = ["LinearAlgebra"]
 git-tree-sha1 = "7fbaf9f73cd4c8561702ea9b16acf3f99d913fe4"
 uuid = "29a986be-02c6-4525-aec4-84b980013641"
 version = "1.2.8"
+
+[[deps.FileIO]]
+deps = ["Pkg", "Requires", "UUIDs"]
+git-tree-sha1 = "7be5f99f7d15578798f338f5433b6c432ea8037b"
+uuid = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
+version = "1.16.0"
+
+[[deps.FilePathsBase]]
+deps = ["Compat", "Dates", "Mmap", "Printf", "Test", "UUIDs"]
+git-tree-sha1 = "e27c4ebe80e8699540f2d6c805cc12203b614f12"
+uuid = "48062228-2e41-5def-b9a4-89aafe57970f"
+version = "0.9.20"
 
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
@@ -846,6 +926,12 @@ git-tree-sha1 = "4da0f88e9a39111c2fa3add390ab15f3a44f3ca3"
 uuid = "22cec73e-a1b8-11e9-2c92-598750a2cf9c"
 version = "0.3.1"
 
+[[deps.InlineStrings]]
+deps = ["Parsers"]
+git-tree-sha1 = "0cf92ec945125946352f3d46c96976ab972bde6f"
+uuid = "842dd82b-1e85-43dc-bf29-5d0ee9dffc48"
+version = "1.3.2"
+
 [[deps.IntegerMathUtils]]
 git-tree-sha1 = "f366daebdfb079fd1fe4e3d560f99a0c892e15bc"
 uuid = "18e54dd8-cb9d-406c-a71d-865a43cbb235"
@@ -879,6 +965,11 @@ git-tree-sha1 = "49510dfcb407e572524ba94aeae2fced1f3feb0f"
 uuid = "3587e190-3f89-42d0-90ee-14403ec27112"
 version = "0.1.8"
 
+[[deps.InvertedIndices]]
+git-tree-sha1 = "82aec7a3dd64f4d9584659dc0b62ef7db2ef3e19"
+uuid = "41ab1584-1d38-5bbf-9106-f11c6c58b48f"
+version = "1.2.0"
+
 [[deps.IrrationalConstants]]
 git-tree-sha1 = "7fd44fd4ff43fc60815f8e764c0f352b83c49151"
 uuid = "92d709cd-6900-40b7-9082-c6be49f344b6"
@@ -894,6 +985,12 @@ version = "0.9.2"
 git-tree-sha1 = "a3f24677c21f5bbe9d2a714f95dcd58337fb2856"
 uuid = "82899510-4779-5014-852e-03e436cf321d"
 version = "1.0.0"
+
+[[deps.JLD2]]
+deps = ["FileIO", "MacroTools", "Mmap", "OrderedCollections", "Pkg", "Printf", "Reexport", "TranscodingStreams", "UUIDs"]
+git-tree-sha1 = "ec8a9c9f0ecb1c687e34c1fda2699de4d054672a"
+uuid = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
+version = "0.4.29"
 
 [[deps.JLFzf]]
 deps = ["Pipe", "REPL", "Random", "fzf_jll"]
@@ -1081,6 +1178,18 @@ git-tree-sha1 = "7f3efec06033682db852f8b3bc3c1d2b0a0ab066"
 uuid = "38a345b3-de98-5d2b-a5d3-14cd9215e700"
 version = "2.36.0+0"
 
+[[deps.LightOSM]]
+deps = ["DataStructures", "Graphs", "HTTP", "JSON", "LightXML", "MetaGraphs", "NearestNeighbors", "Parameters", "QuickHeaps", "SimpleWeightedGraphs", "SparseArrays", "SpatialIndexing", "StaticArrays", "StaticGraphs", "Statistics"]
+git-tree-sha1 = "4a0ebcf9a80b9ac98242016aff608afc39f61f4b"
+uuid = "d1922b25-af4e-4ba3-84af-fe9bea896051"
+version = "0.2.8"
+
+[[deps.LightXML]]
+deps = ["Libdl", "XML2_jll"]
+git-tree-sha1 = "e129d9391168c677cd4800f5c0abb1ed8cb3794f"
+uuid = "9c8b4983-aa76-5018-a973-4c85ecc9e179"
+version = "0.9.0"
+
 [[deps.LineSearches]]
 deps = ["LinearAlgebra", "NLSolversBase", "NaNMath", "Parameters", "Printf"]
 git-tree-sha1 = "7bbea35cec17305fc70a0e5b4641477dc0789d9d"
@@ -1159,6 +1268,12 @@ version = "2.28.0+0"
 git-tree-sha1 = "c13304c81eec1ed3af7fc20e75fb6b26092a1102"
 uuid = "442fdcdd-2543-5da2-b0f3-8c86c306513e"
 version = "0.3.2"
+
+[[deps.MetaGraphs]]
+deps = ["Graphs", "JLD2", "Random"]
+git-tree-sha1 = "2af69ff3c024d13bde52b34a2a7d6887d4e7b438"
+uuid = "626554b9-1ddb-594c-aa3c-2596fe9399a5"
+version = "0.7.1"
 
 [[deps.Metatheory]]
 deps = ["AutoHashEquals", "DataStructures", "Dates", "DocStringExtensions", "Parameters", "Reexport", "TermInterface", "ThreadsX", "TimerOutputs"]
@@ -1397,6 +1512,12 @@ git-tree-sha1 = "050ca4aa2ca31484b51b849d8180caf8e4449c49"
 uuid = "1d0040c9-8b98-4ee7-8388-3f51789ca0ad"
 version = "0.1.11"
 
+[[deps.PooledArrays]]
+deps = ["DataAPI", "Future"]
+git-tree-sha1 = "a6062fe4063cdafe78f4a0a81cfffb89721b30e7"
+uuid = "2dfb63ee-cc39-5dd5-95bd-886bf059d720"
+version = "1.4.2"
+
 [[deps.PositiveFactorizations]]
 deps = ["LinearAlgebra"]
 git-tree-sha1 = "17275485f373e6673f7e7f97051f703ed5b15b20"
@@ -1415,6 +1536,12 @@ git-tree-sha1 = "47e5f437cc0e7ef2ce8406ce1e7e24d44915f88d"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.3.0"
 
+[[deps.PrettyTables]]
+deps = ["Crayons", "Formatting", "LaTeXStrings", "Markdown", "Reexport", "StringManipulation", "Tables"]
+git-tree-sha1 = "96f6db03ab535bdb901300f88335257b0018689d"
+uuid = "08abe8d2-0d0c-5749-adfa-8a2ac140af0d"
+version = "2.2.2"
+
 [[deps.Primes]]
 deps = ["IntegerMathUtils"]
 git-tree-sha1 = "311a2aa90a64076ea0fac2ad7492e914e6feeb81"
@@ -1424,6 +1551,12 @@ version = "0.5.3"
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.ProgressMeter]]
+deps = ["Distributed", "Printf"]
+git-tree-sha1 = "d7a7aef8f8f2d537104f170139553b14dfe39fe9"
+uuid = "92933f4c-e287-5a05-a399-4b506db050ca"
+version = "1.7.2"
 
 [[deps.Qt5Base_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "Fontconfig_jll", "Glib_jll", "JLLWrappers", "Libdl", "Libglvnd_jll", "OpenSSL_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libxcb_jll", "Xorg_xcb_util_image_jll", "Xorg_xcb_util_keysyms_jll", "Xorg_xcb_util_renderutil_jll", "Xorg_xcb_util_wm_jll", "Zlib_jll", "xkbcommon_jll"]
@@ -1436,6 +1569,12 @@ deps = ["DataStructures", "LinearAlgebra"]
 git-tree-sha1 = "97aa253e65b784fd13e83774cadc95b38011d734"
 uuid = "1fd47b50-473d-5c70-9696-f719f8f3bcdc"
 version = "2.6.0"
+
+[[deps.QuickHeaps]]
+deps = ["ArrayTools", "DataStructures"]
+git-tree-sha1 = "ff720a9c8356004cc9e3d109cdcb327510345edc"
+uuid = "30b38841-0f52-47f8-a5f8-18d5d4064379"
+version = "0.1.2"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
@@ -1615,6 +1754,12 @@ git-tree-sha1 = "5d7e3f4e11935503d3ecaf7186eac40602e7d231"
 uuid = "699a6c99-e7fa-54fc-8d76-47d257e15c1d"
 version = "0.9.4"
 
+[[deps.SimpleWeightedGraphs]]
+deps = ["Graphs", "LinearAlgebra", "Markdown", "SparseArrays", "Test"]
+git-tree-sha1 = "a6f404cc44d3d3b28c793ec0eb59af709d827e4e"
+uuid = "47aef6b3-ad0c-573a-a1e2-d07658019622"
+version = "1.2.1"
+
 [[deps.SnoopPrecompile]]
 git-tree-sha1 = "f604441450a3c0569830946e5b33b78c928e1a85"
 uuid = "66db9d55-30c0-4569-8b51-7e840670fc0c"
@@ -1638,6 +1783,11 @@ deps = ["Adapt", "ArrayInterfaceCore", "ArrayInterfaceStaticArrays", "Compat", "
 git-tree-sha1 = "4245283bee733122a9cb4545748d64e0c63337c0"
 uuid = "47a9eef4-7e08-11e9-0b38-333d64bd3804"
 version = "1.30.0"
+
+[[deps.SpatialIndexing]]
+git-tree-sha1 = "fb7041e6bd266266fa7cdeb80427579e55275e4f"
+uuid = "d4ead438-fe20-5cc5-a293-4fd39a41b74c"
+version = "0.1.3"
 
 [[deps.SpecialFunctions]]
 deps = ["ChainRulesCore", "IrrationalConstants", "LogExpFunctions", "OpenLibm_jll", "OpenSpecFun_jll"]
@@ -1667,6 +1817,12 @@ version = "1.5.11"
 git-tree-sha1 = "6b7ba252635a5eff6a0b0664a41ee140a1c9e72a"
 uuid = "1e83bf80-4336-4d27-bf5d-d5a4f845583c"
 version = "1.4.0"
+
+[[deps.StaticGraphs]]
+deps = ["Graphs", "JLD2", "SparseArrays"]
+git-tree-sha1 = "855371d8fdfaed46dbb32a7c57a42db4441b9247"
+uuid = "4c8beaf5-199b-59a0-a7f2-21d17de635b6"
+version = "0.3.0"
 
 [[deps.Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
@@ -1713,6 +1869,11 @@ deps = ["ArrayInterface", "CloseOpenIntervals", "IfElse", "LayoutPointers", "Man
 git-tree-sha1 = "8e91e5618bbca975312313c39ff827ea8f802fe3"
 uuid = "7792a7ef-975c-4747-a70f-980b88e8d1da"
 version = "0.4.4"
+
+[[deps.StringManipulation]]
+git-tree-sha1 = "46da2434b41f41ac3594ee9816ce5541c6096123"
+uuid = "892a3eda-7b42-436c-8928-eab12a02cf0e"
+version = "0.3.0"
 
 [[deps.SuiteSparse]]
 deps = ["Libdl", "LinearAlgebra", "Serialization", "SparseArrays"]
@@ -1906,6 +2067,12 @@ git-tree-sha1 = "4528479aa01ee1b3b4cd0e6faef0e04cf16466da"
 uuid = "2381bf8a-dfd0-557d-9999-79630e7b1b91"
 version = "1.25.0+0"
 
+[[deps.WeakRefStrings]]
+deps = ["DataAPI", "InlineStrings", "Parsers"]
+git-tree-sha1 = "b1be2855ed9ed8eac54e5caff2afcdb442d52c23"
+uuid = "ea10d353-3f73-51f8-a26c-33c1cb351aa5"
+version = "1.4.2"
+
 [[deps.Widgets]]
 deps = ["Colors", "Dates", "Observables", "OrderedCollections"]
 git-tree-sha1 = "fcdae142c1cfc7d89de2d11e08721d0f2f86c98a"
@@ -1917,6 +2084,11 @@ deps = ["LinearAlgebra", "SparseArrays"]
 git-tree-sha1 = "de67fa59e33ad156a590055375a30b23c40299d3"
 uuid = "efce3f68-66dc-5838-9240-27a6d6f5f9b6"
 version = "0.5.5"
+
+[[deps.WorkerUtilities]]
+git-tree-sha1 = "cd1659ba0d57b71a464a29e64dbc67cfe83d54e7"
+uuid = "76eceee3-57b5-4d4a-8e66-0e911cebbf60"
+version = "1.6.1"
 
 [[deps.XML2_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Libiconv_jll", "Pkg", "Zlib_jll"]
@@ -2146,16 +2318,22 @@ version = "1.4.1+0"
 # ╔═╡ Cell order:
 # ╟─4ad649e4-1435-47d4-8a01-25dc2fa64273
 # ╟─e6d784a2-7d46-11ed-238e-db9cc1f9426b
+# ╟─51d9ca88-2aac-4b19-9eb3-a7f47318f5e5
+# ╟─767fa1f0-baa7-4819-97b1-1eac93b7d9f7
 # ╟─d776042f-c807-425f-947e-b0d067ee099e
 # ╟─8645bd22-3f1b-467d-8faf-c00d216e8082
-# ╠═e08996c7-050f-4126-b6b1-e4041aeef510
-# ╠═c6ccb90b-d61d-417d-8f55-3b5b35906242
+# ╟─c6ccb90b-d61d-417d-8f55-3b5b35906242
 # ╟─8c472bfc-3ae8-4c17-a55e-01e17edb33d9
-# ╠═569e4c57-8734-4cc3-8d5f-a5d18e60115a
+# ╟─569e4c57-8734-4cc3-8d5f-a5d18e60115a
 # ╟─4e3076cf-307a-4fc0-87c9-78a922a121c0
 # ╟─b14cf024-320f-48c1-bffa-a2e9b71e275e
-# ╠═f575e3c0-5037-4de9-acc2-5ee2bd4f2f54
-# ╠═91d07b32-bf19-4d8d-861b-ebd9007636fb
-# ╟─f8a799ae-4a5f-4f88-a8ab-6c58b86abcc7
+# ╠═0d295b1f-4553-42ec-8448-7af3326223b5
+# ╠═f2a456b4-c4d3-4c51-88c8-8d8aa72d54a2
+# ╟─bea9af50-ecb8-4e48-a60b-82bca3223aad
+# ╠═9e1db53e-973f-4968-85eb-3d9d0d5609fc
+# ╟─292875f9-7299-4258-bd64-e7d949647f75
+# ╠═26c0c303-41c1-4f55-866a-b7da8c2a8cdc
+# ╠═ac7badde-6c14-45d6-8144-0dcbbeca450a
+# ╠═dfb072e5-051c-4739-b9cd-3a24fb7330c0
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
