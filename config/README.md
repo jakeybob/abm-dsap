@@ -7,6 +7,8 @@
 
 This can be run locally, or via e.g. binder etc.
 
+https://jupyterhub.github.io/nbgitpuller/link?tab=binder
+
 
 ## Running Pluto Notebooks
 
