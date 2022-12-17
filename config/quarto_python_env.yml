@@ -1,7 +1,0 @@
-name: quarto_python_env
-channels:
-  - defaults
-dependencies:
-  - python
-  - nbclient
-  - jupyter
