@@ -1,4 +1,4 @@
-# Agent Based Modelling in Julia
+# Agent Based Infectious Disease Modelling in Julia
 
 ## Introduction
 An agent based model prototype, developed in [Julia](https://julialang.org/downloads/) (primarily using [Agents.jl](https://juliadynamics.github.io/Agents.jl/stable/)) as part of the Scottish Government [Data Science Accelerator Programme](https://www.gov.scot/publications/data-science-accelerator/)

@@ -59,15 +59,15 @@ This can all be described by a few differential equations...
 
 $\dot S(t) = - \beta S(t)I(t)$
 
-*The rate of change of the susceptible proportion of the population at time *t* is: the proportion susceptible (at time *t*) times the proportion infected (at time *t*), times some number $\beta$ (which tells you how infectious the disease is -- a more infectious disease has higher $\beta$)*
+The rate of change of the susceptible proportion of the population at time *t* is: the proportion susceptible (at time *t*) times the proportion infected (at time *t*), times some number $\beta$ (which tells you how infectious the disease is -- a more infectious disease has higher $\beta$)
 
 $\dot R(t) = \gamma I(t)$
 
-*The rate of change of the proportion of the population who have recovered at time *t* is the proportion who are infected times some number $\gamma$ -- the larger $\gamma$ is, the quicker people recover.*
+The rate of change of the proportion of the population who have recovered at time *t* is the proportion who are infected times some number $\gamma$ -- the larger $\gamma$ is, the quicker people recover.
 
 $\dot I(t) = \dot S(t) + \dot R(t)$
 
-*The rate of change of the infected proportion of the population at time *t* is: the sum of the rates of change of the susceptible and recovered population (times -1)*
+The rate of change of the infected proportion of the population at time *t* is: the sum of the rates of change of the susceptible and recovered population (times -1)
 
 An interactive SIR model built this way, with some adjustable parameters, can be seen below.
 """
