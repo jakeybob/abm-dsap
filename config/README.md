@@ -1,4 +1,4 @@
-# Configuration
+# Configuration Notes
 
 ## Julia Setup
 The Julia programming environment is available [here](https://julialang.org/downloads/) for all major platforms (Windows, MacOS, Linux), with platform specific installation instructions [here](https://julialang.org/downloads/platform/).
@@ -28,6 +28,7 @@ To run the same Jupyter notebook locally, run the launcher Julia script [here](.
 `conda env create -n quarto_python_env --file quarto_python_env.yml`
 
 2. set a `QUARTO_PYTHON` environment variable to point to this e.g. 
+
 `export QUARTO_PYTHON="/home/USERNAME/miniconda3/envs/quarto_python_env/bin/python"` 
 
 to `.bashrc` on unix/Linux or
@@ -44,7 +45,7 @@ on MacOS, or set
 ### Binder Setup
 The mybinder service uses the Python package [`jupyter-repo2docker`](https://repo2docker.readthedocs.io/en/latest/index.html) to build a [Docker](https://www.docker.com) image from a GitHub repository and open it in an executable environment.
 
-This process can be (very) slow on first launch, but images are cached to speed up future launches. As any change to the main git repository branch will necessitate an image rebuild, the environment is built from an isoloated branch (e.g. `env-binder-01`) which contains the required Julia environment information (in `Project.toml`).
+This process can be (very) slow on first launch, but images are cached to speed up future launches. As any change to the main git repository branch will necessitate an image rebuild, the environment is built from an isoloated branch (e.g. [`env-binder-01`](https://github.com/jakeybob/abm-dsap/tree/env-binder-01)) which contains the required Julia environment information (in a `Project.toml` file).
 
 Additionally, the Python package [`nbgitpuller`](https://jupyterhub.github.io/nbgitpuller/install.html) is specified in a `requirements.txt` file. This enables the image build process to pull in the required notebook content (in this case it is pulled from the `main` branch).
 
