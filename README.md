@@ -15,7 +15,7 @@ Instructions for setting up Julia, the general layout of this repository, and ru
 ## Some example notebooks
 An interactive Jupyter notebook showing the difference between differential equation disease modelling, and the agent-based equivalent can be found here: [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/jakeybob/abm-dsap/env-binder-01?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fjakeybob%252Fabm-dsap%26urlpath%3Dtree%252Fabm-dsap%252Fcode%252F01-basic-SIR%252F01-basic-SIR.ipynb%26branch%3Dmain)
 
-![interactive notebook demo](docs/end_presentation/pics/nbvid2.mp4)
+[![interactive notebook demo](https://user-images.githubusercontent.com/304817/208320865-2e03409f-c78d-4286-86ea-33a342f3c8db.mp4)](https://mybinder.org/v2/gh/jakeybob/abm-dsap/env-binder-01?urlpath=git-pull%3Frepo%3Dhttps%253A%252F%252Fgithub.com%252Fjakeybob%252Fabm-dsap%26urlpath%3Dtree%252Fabm-dsap%252Fcode%252F01-basic-SIR%252F01-basic-SIR.ipynb%26branch%3Dmain)
 
 (alternatively [this](code/01-basic-SIR/01-basic-SIR-jupyter-setup.jl) notebook can be run locally)
 
@@ -24,7 +24,7 @@ A [Pluto](https://github.com/fonsp/Pluto.jl) version of this notebook can be run
 ## Some example simulations
 To demonstrate the sort of specific problem agent-based models are uniquely suited to, a simplified real-life disease transmission scenario was simulated using an office floor plan. Individuals are free to move around the office and walk to e.g. the kitchen, bathroom, exit (or simply stay at their desk), and potentially pass on their infection.
 
-![*2D office simulation*](docs/end_presentation/pics/meridian_agent_anim.mp4)
+![*2D office simulation*](https://user-images.githubusercontent.com/304817/208320163-64145f69-bd68-4c03-965f-f1b978c90e49.mp4)
 
 As the agent-based model can capture both *when* and *where* people become infected, it's possible to construct an infection heatmap for this specific space.
 
