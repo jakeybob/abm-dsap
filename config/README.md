@@ -5,6 +5,25 @@ The Julia programming environment is available [here](https://julialang.org/down
 
 All code in this repository was written using Julia v1.8.2. 
 
+## Project Layout
+
+* `code`
+    - `01-basic-SIR`: code for generating a basic SIR model, plus demonstration notebooks (Jupyter and Pluto) with their respective setup scripts
+    - `02-spatial-SIR`: extension of this to two dimensions, with agent movement
+    - `03-graphgrid-SIR`: more complex spaces and agent path-finding
+    - `04-OSM-SIR`: tests using OpenStreetMap graph objects
+    - `05-web`: proof-of-concept web-server / API implementation
+    - `R`: any code written in R, for testing the API (plus some plotting)
+    - `sketches`: rough and ready tests
+* `config`
+    - `quarto_python_env.yml`: specification for a Python environment that will compile Quarto outputs
+    - `README.md`: this thing you're reading
+* `docs`
+    - `end_presentation`: final group DSAP (data science accelerator programme) presentation
+    - `intro_presentation`: initial pitch presentation
+    - `mid_point_presentation`: halfway point update
+    - `MVP-spec.md`: initial minimum output spec
+
 ## Running Jupyter Notebooks
 ### ...on the web
 The interactive Jupyter notebook [here](../code/01-basic-SIR/01-basic-SIR.ipynb) can be run by launching a web-based computing environment via the [mybinder](https://mybinder.org) service.
@@ -60,7 +79,7 @@ This can be run on a remote server (here a Raspberry Pi 4 running default Raspbe
 
 `julia srvr.jl &`
 
-then, on a Julia REPL (on the remote server) start the HTTP server...
+then, on a Julia command line (on the remote server) start the HTTP server...
 
 ```Julia
 using JuliaWebAPI   #Load package
@@ -71,4 +90,4 @@ const apiclnt = APIInvoker("tcp://127.0.0.1:9999");
 #Start the HTTP server in current process (Ctrl+C to interrupt)
 run_http(apiclnt, 8888)
 ```
-This model can then be queried by sending an HTTP request to the server IP address, with the model parameters set as arguments in the request. Model outputs are then sent to a network location (but could easily be set to be returned as e.g. a .json response to the HTTP query). An example writting in R can be found [here](../code/R/api.R).
+This model can then be queried by sending an HTTP request to the server IP address, with the model parameters set as arguments in the request. Model outputs are then sent to a network location (but could easily be set to be returned as e.g. a .json response to the HTTP query). An example written in R can be found [here](../code/R/api.R).
